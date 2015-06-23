@@ -1,0 +1,19 @@
+{
+  "name": "jns",
+  "version": "1.0.0",
+  "description": "jns lib for node",
+  "keywords": [
+    "jns"
+  ],
+  "preferGlobal": true,
+  "author": "jackness",
+  "license": "ISC",
+  "bin": {
+    "jns": "./bin/init.js"
+  },
+
+  "dependencies": {
+    "inquirer": "~0.8.5",
+    "keypress": "*"
+  }
+}
