@@ -79,7 +79,7 @@ var gn = {
                             }
                         },/node_module|package.js$/i);
                     }
-                },
+                };
             
 
             inquirer.prompt([
