@@ -11,9 +11,12 @@
   "bin": {
     "jns": "./bin/init.js"
   },
-
   "dependencies": {
     "inquirer": "~0.8.5",
     "keypress": "*"
+  },
+  "devDependencies": {
+    "node-watch": "^0.3.4",
+    "socket.io": "^1.3.5"
   }
 }

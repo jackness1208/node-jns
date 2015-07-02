@@ -30,3 +30,5 @@ switch(myArgv[0]){
         require(__dirname.replace("\\","/") + '/../task/w-help.js').apply(global, myArgv.slice(1));
         break;
 }
+
+

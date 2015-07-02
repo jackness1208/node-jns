@@ -1,8 +1,9 @@
 var inquirer = require("inquirer"),
     readline = require('readline'),
-    color = require('../lib/colors'),
+    watch = require('node-watch'),
     fs = require('fs'),
     global = require('../lib/global'),
+    color = require('../lib/colors'),
     fn = global.fn,
     pg = global.pg;
 
@@ -139,33 +140,67 @@ var gn = {
 
 
     release: function() {
-        var serverDoc = pg.serverPath.replace(/\/$/, '');
-        if (!fs.existsSync(serverDoc)) {
-            fs.mkdirSync(serverDoc);
-            var pkgConfig = {
-                    "name": "jnsLocalServer",
-                    "version": "1.0.0",
-                    "description": "jns local server",
-                    "keywords": [
-                        "jns"
-                    ],
-                    "preferGlobal": true,
-                    "author": "jackness",
-                    "license": "ISC",
-                    "dependencies": {
-                        "express": "3.4.8",
-                        "ejs": "*"
-                    }
-                };
-            fs.writeFileSync(pg.serverPath + 'package.js', JSON.stringify(pkgConfig, null, 4));
-            fn.copyPathFiles(pg.basePath + 'init-files/grunt-express/', pg.serverPath, function() {
-                fn.runCMD('npm install', function(r){
-                    if(r.status == 1){
-                        fn.msg.success('server 初始化成功');
-                    }
-                }, pg.serverPath);
+        var server = require('http').createServer(function(req, res){
+                if(req.url == '/livereload.js'){
+                    res.writeHead(200, { 
+                        'Content-Type': 'application/x-javascript'
+                    });
+                    res.write(fs.readFileSync(pg.basePath + 'lib/livereload.js'));
+                    res.end();
+                }
+            }),
+            io = require('socket.io')(server),
+            serverPort = 8123,
+            serverDoc = pg.serverPath.replace(/\/$/, ''),
+            // server 环境搭建
+            serverBuild = function(callback){
+                if (!fs.existsSync(serverDoc)) {
+                    fs.mkdirSync(serverDoc);
+                    
+                    fn.copyPathFiles(pg.basePath + 'init-files/local-server/', pg.serverPath, function() {
+                        fn.runCMD('npm install', function(r){
+                            if(r.status == 1){
+                                fn.msg.nowrap('_');
+                                callback && callback();
+                            }
+                        }, pg.serverPath);
+                    });
+                } else {
+                    callback && callback();
+                }
+            };
+
+        server.listen(serverPort);
+
+        var nowTime = new Date();
+            
+        fn.msg.nowrap(color.green('* '), true);
+        serverBuild(function(){
+            // 文件拷贝
+            fn.copyPathFiles(pg.projectPath, pg.serverPath + 'static/', function(){
+                fn.msg.nowrap(color.green(' ' + (new Date() - nowTime) + 'ms'));
+                watch(pg.projectPath, function(filename){
+                    var myFile = fn.formatPath(filename).replace(pg.projectPath,'');
+                    
+                    var nowTime = new Date();
+                    fn.copyPathFiles(pg.projectPath + myFile, pg.serverPath + myFile, function(){
+                        fn.msg.nowrap(color.green(' ' + (new Date() - nowTime) + 'ms'));
+                        io.emit('reload');
+                    });
+                });
+                
+            }, function(filename, textcontent){
+                if(/\.html$/.test(filename)){
+                    textcontent += '\n' + [
+                        '<script src="http://'+ pg.serverAdress +':'+ serverPort +'/socket.io/socket.io.js"></script>',
+                        '<script src="http://'+ pg.serverAdress +':'+ serverPort +'/livereload.js"></script>'
+                    ].join("\n");
+                } else {
+                    return textcontent;
+                }
             });
-        }
+        });
+        
     },
 
     help: function() {
