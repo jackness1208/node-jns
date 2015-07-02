@@ -178,18 +178,19 @@ var gn = {
         serverBuild(function(){
             // 文件拷贝
             fn.copyPathFiles(pg.projectPath, pg.serverPath + 'static/', function(){
-                fn.msg.nowrap(color.green(' ' + (new Date() - nowTime) + 'ms'));
+                fn.msg.nowrap(color.green(' ' + (new Date() - nowTime) + 'ms\n'));
                 watch(pg.projectPath, function(filename){
                     var myFile = fn.formatPath(filename).replace(pg.projectPath,'');
                     
                     var nowTime = new Date();
                     fn.copyPathFiles(pg.projectPath + myFile, pg.serverPath + myFile, function(){
-                        fn.msg.nowrap(color.green(' ' + (new Date() - nowTime) + 'ms'));
+                        fn.msg.nowrap(color.green(' ' + (new Date() - nowTime) + 'ms\n'));
                         io.emit('reload');
                     });
                 });
                 
             }, function(filename, textcontent){
+                console.log(filename);
                 if(/\.html$/.test(filename)){
                     textcontent += '\n' + [
                         '<script src="http://'+ pg.serverAdress +':'+ serverPort +'/socket.io/socket.io.js"></script>',
