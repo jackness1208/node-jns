@@ -17,6 +17,15 @@ switch(myArgv[0]){
     case 'rename':
         require(__dirname.replace("\\","/") + '/../task/w-rename.js').apply(global, myArgv.slice(1));
         break;
+    
+    case 'server':
+        require(__dirname.replace("\\","/") + '/../task/w-server.js').apply(global, myArgv.slice(1));
+        break;
+    
+    case 'release':
+        require(__dirname.replace("\\","/") + '/../task/w-release.js').apply(global, myArgv.slice(1));
+        break;
+
 
 
     case '-v': 

@@ -1,6 +1,5 @@
 var inquirer = require("inquirer"),
     readline = require('readline'),
-    watch = require('node-watch'),
     fs = require('fs'),
     global = require('../lib/global'),
     color = require('../lib/colors'),
@@ -138,72 +137,6 @@ var gn = {
 
     }, ///}
 
-
-    release: function() {
-        var server = require('http').createServer(function(req, res){
-                if(req.url == '/livereload.js'){
-                    res.writeHead(200, { 
-                        'Content-Type': 'application/x-javascript'
-                    });
-                    res.write(fs.readFileSync(pg.basePath + 'lib/livereload.js'));
-                    res.end();
-                }
-            }),
-            io = require('socket.io')(server),
-            serverPort = 8123,
-            serverDoc = pg.serverPath.replace(/\/$/, ''),
-            // server 环境搭建
-            serverBuild = function(callback){
-                if (!fs.existsSync(serverDoc)) {
-                    fs.mkdirSync(serverDoc);
-                    
-                    fn.copyPathFiles(pg.basePath + 'init-files/local-server/', pg.serverPath, function() {
-                        fn.runCMD('npm install', function(r){
-                            if(r.status == 1){
-                                fn.msg.nowrap('_');
-                                callback && callback();
-                            }
-                        }, pg.serverPath);
-                    });
-                } else {
-                    callback && callback();
-                }
-            };
-
-        server.listen(serverPort);
-
-        var nowTime = new Date();
-            
-        fn.msg.nowrap(color.green('* '), true);
-        serverBuild(function(){
-            // 文件拷贝
-            fn.copyPathFiles(pg.projectPath, pg.serverPath + 'static/', function(){
-                fn.msg.nowrap(color.green(' ' + (new Date() - nowTime) + 'ms\n'));
-                watch(pg.projectPath, function(filename){
-                    var myFile = fn.formatPath(filename).replace(pg.projectPath,'');
-                    
-                    var nowTime = new Date();
-                    fn.copyPathFiles(pg.projectPath + myFile, pg.serverPath + myFile, function(){
-                        fn.msg.nowrap(color.green(' ' + (new Date() - nowTime) + 'ms\n'));
-                        io.emit('reload');
-                    });
-                });
-                
-            }, function(filename, textcontent){
-                console.log(filename);
-                if(/\.html$/.test(filename)){
-                    textcontent += '\n' + [
-                        '<script src="http://'+ pg.serverAdress +':'+ serverPort +'/socket.io/socket.io.js"></script>',
-                        '<script src="http://'+ pg.serverAdress +':'+ serverPort +'/livereload.js"></script>'
-                    ].join("\n");
-                } else {
-                    return textcontent;
-                }
-            });
-        });
-        
-    },
-
     help: function() {
         console.log([
             '',
@@ -212,7 +145,6 @@ var gn = {
             '  Commands:',
             '',
             '    init     project init',
-            '    release  release project to the local server path',
             '',
             '  Options:',
             '',
