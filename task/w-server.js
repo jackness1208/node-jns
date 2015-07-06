@@ -29,7 +29,9 @@ var sv = {
         console.log(color.green('[PATH] ' + pg.serverPath));
     },
     clear: function(){
-        
+        fn.removePathFiles(pg.serverPath, function(){
+            
+        });
     }
 };
 
