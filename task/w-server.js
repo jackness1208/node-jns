@@ -22,7 +22,7 @@ var sv = {
         }
         fn.runCMD( cmdStr, function(){
             console.log(color.green('[PATH] ' + pg.serverPath));
-        }, pg.serverPath);
+        }, pg.serverPath, false);
 
     },
     path: function(){
@@ -30,8 +30,11 @@ var sv = {
     },
     clear: function(){
         fn.removePathFiles(pg.serverPath, function(){
-            
+            fn.msg.line().success('clean is done');
         });
+    },
+    help: function(){
+        //..
     }
 };
 

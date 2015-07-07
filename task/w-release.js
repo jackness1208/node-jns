@@ -11,8 +11,8 @@ var inquirer = require("inquirer"),
 var render = {
         html: function(content){
             content += '\n' + [
-                '<script src="http://'+ pg.serverAdress +':'+ serverPort +'/socket.io/socket.io.js"></script>',
-                '<script src="http://'+ pg.serverAdress +':'+ serverPort +'/livereload.js"></script>'
+                '<script src="http://'+ pg.serverAdress +':'+ pg.livereload.serverPort +'/socket.io/socket.io.js"></script>',
+                '<script src="http://'+ pg.serverAdress +':'+ pg.livereload.serverPort +'/livereload.js"></script>'
             ].join("\n");
             return content;
         }
@@ -30,13 +30,14 @@ var render = {
                     }
                 }),
                 io = require('socket.io')(server),
-                serverPort = 8123,
                 serverDoc = pg.serverPath.replace(/\/$/, ''),
                 // server 环境搭建
                 serverBuild = function(callback){
                     if (!fs.existsSync(serverDoc)) {
                         fs.mkdirSync(serverDoc);
-                        
+                    }
+
+                    if(fs.readdirSync(serverDoc).length == 0){
                         fn.copyPathFiles(pg.basePath + 'init-files/local-server/', pg.serverPath, function() {
                             fn.runCMD('npm install', function(r){
                                 if(r.status == 1){
@@ -50,13 +51,12 @@ var render = {
                     }
                 };
 
-            server.listen(serverPort);
+            server.listen(pg.livereload.serverPort);
 
-            var nowTime = new Date();
-                
             serverBuild(function(){
                 // 文件拷贝
                 fn.copyPathFiles(pg.projectPath, pg.serverPath + 'static/', function(){
+                    fn.msg.line().success('release ok, start to watch');
                     watch(pg.projectPath, function(filename){
                         var myFile = fn.formatPath(filename).replace(pg.projectPath,'');
                         
@@ -84,6 +84,7 @@ var render = {
                 '  Usage: jns release <command>',
                 '',
                 '  Commands:',
+                '    -l   release project to localserver with livereload',
                 '',
                 '',
                 '  Options:',
@@ -96,14 +97,16 @@ var render = {
 
 module.exports = function(type) {
     switch (type) {
-        case '-h':
-        case '--help':
-            release.help();
-            break;
-            
-        default:
+        case '-l':
             release.init();
             break;
+       
+        case '-h':
+        case '--help':
+        default:
+            release.help();
+            break;
+        
     }
 
 
