@@ -1,21 +1,18 @@
-var color = require('../lib/colors'); 
+var color = require('../lib/colors'),
+    fn = require('../lib/global');
 
 module.exports = function(type){
-    console.log([
-        '',
-        '  Usage: jns <command>',
-        '',
-        '  Commands:',
-        '',
-        '    grunt   grunt commands',
-        '    mod     modUi commands',
-        '',
-        '  Options:',
-        '',
-        '    -h, --help      output usage information',
-        '    -v, --version   output the version number',
-        ''
-    ].join("\n"))
+    fn.help({
+        usage: 'jns',
+        commands: {
+            'grunt': 'grunt commands',
+            'mod': 'modUi commands'
+        },
+        options: {
+            '-h, --help': 'output usage information',
+            '-v, --version': 'output the version number'
+        }
+    });
 
 };
 

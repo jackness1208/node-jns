@@ -1,10 +1,9 @@
 var inquirer = require("inquirer"),
     readline = require('readline'),
     fs = require('fs'),
-    global = require('../lib/global'),
     color = require('../lib/colors'),
-    fn = global.fn,
-    pg = global.pg;
+    fn = require('../lib/global'),
+    config = require('../lib/config');
 
 var gn = {
     init: function() { ///{
@@ -33,7 +32,7 @@ var gn = {
                     packageConfig.dependencies = {
                         "express": "3.x"
                     };
-                    fs.writeFile(pg.projectPath + '/package.js', JSON.stringify(packageConfig, null, 4), function(err) {
+                    fs.writeFile(config.projectPath + '/package.js', JSON.stringify(packageConfig, null, 4), function(err) {
                         if (!err) {
                             fn.msg.success('文件创建成功 - package.js')
                         } else {
@@ -42,7 +41,7 @@ var gn = {
 
                     });
 
-                    fn.copyPathFiles(pg.basePath + 'init-files/grunt-uglify/', pg.projectPath, function(err) {
+                    fn.copyPathFiles(config.basePath + 'init-files/grunt-uglify/', config.projectPath, function(err) {
                         if (!err) {
                             fn.msg.line().success('文件初始化完成');
                         } else {
@@ -61,7 +60,7 @@ var gn = {
                         "mysql": "*"
                     };
 
-                    fs.writeFile(pg.projectPath + '/package.js', JSON.stringify(packageConfig, null, 4), function(err) {
+                    fs.writeFile(config.projectPath + '/package.js', JSON.stringify(packageConfig, null, 4), function(err) {
                         if (!err) {
                             fn.msg.success('文件创建成功 - package.js')
                         } else {
@@ -71,7 +70,7 @@ var gn = {
                     });
 
 
-                    fn.copyPathFiles(pg.basePath + 'init-files/grunt-express/', pg.projectPath, function(err) {
+                    fn.copyPathFiles(config.basePath + 'init-files/grunt-express/', config.projectPath, function(err) {
                         if (!err) {
                             fn.msg.line().success('文件初始化完成');
                         } else {
@@ -86,7 +85,7 @@ var gn = {
                 name: 'name',
                 message: '项目名称',
                 type: 'input',
-                default: pg.projectPath.substr(0, pg.projectPath.length - 1).split('/').pop(),
+                default: config.projectPath.substr(0, config.projectPath.length - 1).split('/').pop(),
 
                 filter: function(val) {
                     return val.replace(/[-\.\\\/]/g, '');
@@ -138,19 +137,15 @@ var gn = {
     }, ///}
 
     help: function() {
-        console.log([
-            '',
-            '  Usage: jns grunt <command>',
-            '',
-            '  Commands:',
-            '',
-            '    init     project init',
-            '',
-            '  Options:',
-            '',
-            '    -h, --help      output usage information',
-            ''
-        ].join("\n"));
+        fn.help({
+            usage: 'jns grunt',
+            commands: {
+                'init': 'project init'
+            },
+            options: {
+                '-h, --help': 'output usage information'
+            }
+        });
 
     }
 };

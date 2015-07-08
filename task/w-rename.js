@@ -1,13 +1,11 @@
 var fs = require('fs'),
-    global = require('../lib/global'),
-    fs = require('fs'),
-    fn = global.fn,
-    pg = global.pg,
-    inquirer = require("inquirer");
+    inquirer = require("inquirer"),
+    fn = require('../lib/global'),
+    config = require('../lib/config');
 
 var rename = {
         init: function(){
-            var defaultName = pg.projectPath.substr(0, pg.projectPath.length - 1).split('/').pop();
+            var defaultName = config.projectPath.substr(0, config.projectPath.length - 1).split('/').pop();
             
             inquirer.prompt([
                 {
@@ -17,7 +15,7 @@ var rename = {
                     default: defaultName
                 }
             ], function( answer ) {
-                var frontPath = pg.projectPath,
+                var frontPath = config.projectPath,
                     name = answer.name;
                 
                 fs.readdir(frontPath, function(err, list){
@@ -76,19 +74,16 @@ var rename = {
             });
         },
         help: function(){
-            console.log([
-                '',
-                '  Usage: jns rename <command>',
-                '',
-                '  Commands:',
-                '',
-                '    init   project init',
-                '',
-                '  Options:',
-                '',
-                '    -h, --help      output usage information',
-                ''
-            ].join("\n"));
+            fn.help({
+                usage: 'jns rename',
+                commands: {
+                    'init': 'project init'
+                },
+                options: {
+                    '-h, --help': 'output usage information'
+                }
+            });
+            
         }
     };
 module.exports = function(type){

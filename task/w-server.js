@@ -1,19 +1,18 @@
 var inquirer = require("inquirer"),
     readline = require('readline'),
     fs = require('fs'),
-    global = require('../lib/global'),
     color = require('../lib/colors'),
-    fn = global.fn,
-    pg = global.pg;
+    fn = require('../lib/global'),
+    config = require('../lib/config');
 
 
 var sv = {
     start: function(){
-        fn.runCMD('node app', function(){}, pg.serverPath);
+        fn.runCMD('node app', function(){}, config.serverPath);
     },
     open: function(){
         var cmdStr;
-        if(pg.isWindows){
+        if(config.isWindows){
             cmdStr = 'explorer .';
             
         } else {
@@ -21,20 +20,31 @@ var sv = {
             
         }
         fn.runCMD( cmdStr, function(){
-            console.log(color.green('[PATH] ' + pg.serverPath));
-        }, pg.serverPath, false);
+            console.log(color.green('[PATH] ' + config.serverPath));
+        }, config.serverPath, false);
 
     },
     path: function(){
-        console.log(color.green('[PATH] ' + pg.serverPath));
+        console.log(color.green('[PATH] ' + config.serverPath));
     },
     clear: function(){
-        fn.removePathFiles(pg.serverPath, function(){
+        fn.removePathFiles(config.serverPath, function(){
             fn.msg.line().success('clean is done');
         });
     },
     help: function(){
-        //..
+        fn.help({
+            usage: 'jns server',
+            commands: {
+                'start': 'start the local server',
+                'open': 'open the local server path',
+                'path': 'show the local server path',
+                'clear': 'clear the local server files'
+            },
+            options: {
+                '-h, --help': 'output usage information'
+            }
+        });
     }
 };
 

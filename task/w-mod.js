@@ -1,12 +1,11 @@
-var color = require('../lib/colors'),
-    global = require('../lib/global'),
-    fs = require('fs'),
-    fn = global.fn,
-    pg = global.pg;
+var fs = require('fs'),
+    color = require('../lib/colors'),
+    fn = require('../lib/global'),
+    config = require('../lib/config');
 
 var mod = {
         init: function(){
-            fn.copyPathFiles(pg.basePath + 'init-files/modUi/mod/', pg.projectPath, function(err){
+            fn.copyPathFiles(config.basePath + 'init-files/modUi/mod/', config.projectPath, function(err){
                 if(!err){
                     fn.msg.line().success('文件初始化完成');
                 } else {
@@ -16,19 +15,15 @@ var mod = {
         },
 
         help: function(){
-            console.log([
-                '',
-                '  Usage: jns mod <command>',
-                '',
-                '  Commands:',
-                '',
-                '    init   project init',
-                '',
-                '  Options:',
-                '',
-                '    -h, --help      output usage information',
-                ''
-            ].join("\n"));
+            fn.help({
+                usage: 'jns mod',
+                commands: {
+                    'init': 'project init'
+                },
+                options: {
+                    '-h, --help': 'output usage information'
+                }
+            });
         }
     };
 

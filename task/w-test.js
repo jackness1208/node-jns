@@ -2,10 +2,9 @@ var inquirer = require("inquirer"),
     readline = require('readline'),
     watch = require('node-watch'),
     fs = require('fs'),
-    global = require('../lib/global'),
     color = require('../lib/colors'),
-    fn = global.fn,
-    pg = global.pg;
+    fn = require('../lib/global'),
+    config = require('../lib/config');
 
 module.exports = function(){
     fn.runCMD('npm install', function(r){
@@ -14,5 +13,5 @@ module.exports = function(){
         } else {
             fn.msg.error('fff:' + r.error);
         }
-    }, pg.projectPath);
+    }, config.projectPath);
 };
