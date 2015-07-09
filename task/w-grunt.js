@@ -40,8 +40,8 @@ var gn = {
                         }
 
                     });
-
-                    fn.copyPathFiles(config.basePath + 'init-files/grunt-uglify/', config.projectPath, function(err) {
+                    
+                    fn.copyFiles(config.basePath + 'init-files/grunt-uglify/', config.projectPath, function(err) {
                         if (!err) {
                             fn.msg.line().success('文件初始化完成');
                         } else {

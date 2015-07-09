@@ -28,7 +28,8 @@ var render = {
     },
     
     release = {
-        init: function(){
+        staticServer: function(){
+            fn.timer.start();
             var serverDoc = config.serverPath.replace(/\/$/, ''),
                 // server 环境搭建
                 serverBuild = function(callback){
@@ -36,31 +37,30 @@ var render = {
                         fs.mkdirSync(serverDoc);
                     }
 
-                    if(fs.readdirSync(serverDoc).length == 0){
-                        fn.copyPathFiles(config.basePath + 'init-files/local-server/', config.serverPath, function() {
-                            fn.runCMD('npm install', function(r){
-                                if(r.status == 1){
-                                    fn.msg.nowrap('_');
-                                    callback && callback();
-                                }
-                            }, config.serverPath);
-                        });
-                    } else {
+                    fn.copyFiles(config.basePath + 'init-files/local-server/', config.serverPath, function() {
                         callback && callback();
-                    }
+                        
+                    });
                 };
 
             wsServer.init();
 
             serverBuild(function(){
                 // 文件拷贝
-                fn.copyPathFiles(config.projectPath, config.serverPath + 'static/', function(){
+                fn.copyFiles(config.projectPath, config.serverPath + 'static/', function(){
+                    fn.timer.end();
                     fn.msg.line().success('release ok, start to watch');
+                    
                     watch(config.projectPath, function(filename){
+                        fn.timer.start();
                         var myFile = fn.formatPath(filename).replace(config.projectPath,'');
-                        var nowTime = new Date();
-                        fn.copyPathFiles(config.projectPath + myFile, config.serverPath + 'static/' + myFile, function(){
+
+                        fn.copyFiles(config.projectPath + myFile, config.serverPath + 'static/' + myFile, function(){
                             wsServer.send('reload', 'reload it!');
+                            fn.timer.end();
+
+                        }, function(filename, textcontent){
+                            return render.init(filename, textcontent);
                         });
                     });
                     
@@ -89,7 +89,7 @@ var render = {
 module.exports = function(type) {
     switch (type) {
         case '-l':
-            release.init();
+            release.staticServer();
             break;
        
         case '-h':

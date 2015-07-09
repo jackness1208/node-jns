@@ -8,7 +8,15 @@ var inquirer = require("inquirer"),
 
 var sv = {
     start: function(){
-        fn.runCMD('node app', function(){}, config.serverPath);
+        fn.timer.start();
+        fn.runCMD('npm install', function(r){
+            if(r.status == 1){
+                fn.runCMD('node app', function(){
+                    fn.timer.end();
+
+                }, config.serverPath);
+            }
+        }, config.serverPath);
     },
     open: function(){
         var cmdStr;
@@ -28,9 +36,12 @@ var sv = {
         console.log(color.green('[PATH] ' + config.serverPath));
     },
     clear: function(){
-        fn.removePathFiles(config.serverPath, function(){
+        fn.timer.start();
+        fn.removeFiles(config.serverPath, function(){
+            fn.timer.end();
             fn.msg.line().success('clean is done');
         });
+        
     },
     help: function(){
         fn.help({
