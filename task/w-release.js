@@ -41,6 +41,37 @@ var render = {
                         callback && callback();
                         
                     });
+                },
+                docTreeBuild = function(callback){
+                    fn.getPaths(config.projectPath, function(err, list){
+                        var targetFile = config.serverPath + 'tpl/main/home.html',
+                            sourceFile = config.basePath + 'init-files/local-server/tpl/main/home.html',
+                            options = {
+                                'treeData': fn.pathsFormat(list, '/'),
+                            },
+                            myRender = function(content, op){
+                                var myContent = render.init(targetFile, content),
+                                    str;
+                                for(var key in op){
+                                    if(op.hasOwnProperty(key)){
+                                        switch(typeof op[key]){
+                                            case 'object':
+                                                str = JSON.stringify(op[key]);
+                                                break;
+
+                                            case 'string':
+                                            default:
+                                                str = op[key];
+                                                break;
+                                        }
+                                        myContent = myContent.replace(new RegExp('{{'+ key +'}}', 'g'), str);
+                                    }
+                                }
+                                return myContent;
+                            };
+                            fs.writeFileSync(targetFile, myRender(fs.readFileSync(sourceFile), options));
+                            callback && callback();
+                    });
                 };
 
             wsServer.init();
@@ -48,19 +79,23 @@ var render = {
             serverBuild(function(){
                 // 文件拷贝
                 fn.copyFiles(config.projectPath, config.serverPath + 'static/', function(){
-                    fn.timer.end();
-                    fn.msg.line().success('release ok, start to watch');
-                    
-                    watch(config.projectPath, function(filename){
-                        fn.timer.start();
-                        var myFile = fn.formatPath(filename).replace(config.projectPath,'');
+                    docTreeBuild(function(){
+                        fn.timer.end();
+                        fn.msg.line().success('release ok, start to watch');
+                        
+                        watch(config.projectPath, function(filename){
+                            fn.timer.start();
+                            var myFile = fn.formatPath(filename).replace(config.projectPath,'');
 
-                        fn.copyFiles(config.projectPath + myFile, config.serverPath + 'static/' + myFile, function(){
-                            wsServer.send('reload', 'reload it!');
-                            fn.timer.end();
+                            fn.copyFiles(config.projectPath + myFile, config.serverPath + 'static/' + myFile, function(){
+                                docTreeBuild(function(){
+                                    wsServer.send('reload', 'reload it!');
+                                    fn.timer.end();   
+                                });
 
-                        }, function(filename, textcontent){
-                            return render.init(filename, textcontent);
+                            }, function(filename, textcontent){
+                                return render.init(filename, textcontent);
+                            });
                         });
                     });
                     

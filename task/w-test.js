@@ -7,11 +7,46 @@ var inquirer = require("inquirer"),
     config = require('../lib/config');
 
 module.exports = function(){
-    fn.runCMD('npm install', function(r){
-        if(r.status == 1){
-            fn.msg.line().success('all is done');
-        } else {
-            fn.msg.error('fff:' + r.error);
-        }
-    }, config.projectPath);
+    fn.getPaths(config.projectPath, function(err, list){
+        var r = [],
+            pathObj = {},
+            dataBuild = function(obj){
+                var r = [];    
+                for(var key in obj){
+                    if(obj.hasOwnProperty(key)){
+                        if(typeof obj[key] == 'object'){
+                            r.push({
+                                name: key,
+                                items: dataBuild(obj[key])
+                            });
+                        } else {
+                            r.push({
+                                name: key,
+                                href: obj[key]
+                            });
+                        }
+                    }
+                }
+                return r;
+            };
+
+        list.forEach(function(pathstr, i){
+            var arr = pathstr.split('/'),
+                myObj = pathObj;
+            arr.forEach(function(path, i){
+                if(i != arr.length - 1){
+                    !myObj[path] && (myObj[path] = {});
+                    myObj = myObj[path];
+
+                } else {
+                    myObj[path] = pathstr;
+                }
+            });
+            
+        });
+
+        console.log(dataBuild(pathObj))
+    });
 };
+
+
