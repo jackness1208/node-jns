@@ -18,19 +18,27 @@ var render = {
                     return render.html(content);
 
                 default:
-                    return content;
+                    return content + '';
             }
         },
         html: function(content){
-            return wsServer.render(content);
+            return content + '';
         }
 
     },
     
     release = {
-        staticServer: function(optimize){///{
+        optimize: function(callback){
+            // TODO load jns-config
+            callback && callback();
+        },
+        
+        staticServer: function(op){///{
+            op = op || {};
+            console.log(op);
             fn.timer.start();
-            var serverDoc = config.serverPath.replace(/\/$/, ''),
+            var she = this,
+                serverDoc = config.serverPath.replace(/\/$/, ''),
                 // server 环境搭建
                 serverBuild = function(callback){
                     if (!fs.existsSync(serverDoc)) {
@@ -42,52 +50,27 @@ var render = {
                         
                     });
                 },
-                // 压缩操作
-                optimizeHandle = function(callback){
-                    callback && callback();
-                    //TODO
-                    // if(!optimize){
-                    //     callback && callback();
-                    //     return;
-                    // }
-
-                    // var requirejs = require('requirejs'),
-                    //     myPath = config.serverPath + 'static/';
-                    // fn.getPaths(myPath, function(err, list){
-                    //     list.forEach(function(item, i){
-                    //         if(!/\.js$/.test(item)){
-                    //             return;
-                    //         }
-                    //         console.log(item);
-                    //         var myFile = myPath + item,
-                    //             config = {
-                    //                 baseUrl: myPath,
-                    //                 name: item,
-                    //                 out: item
-                    //             };
-                    //         requirejs.optimize(config);
-                    //     });
-                    // });
-                    // callback && callback();
-                },
+                
                 // 监控操作
                 watchHandle = function(){
-                    watch(config.projectPath, function(filename){
-                        fn.timer.start();
-                        var myFile = fn.formatPath(filename).replace(config.projectPath,'');
+                    if(op.watch){
+                        watch(config.projectPath, function(filename){
+                            fn.timer.start();
+                            var myFile = fn.formatPath(filename).replace(config.projectPath,'');
 
-                        fn.copyFiles(config.projectPath + myFile, config.serverPath + 'static/' + myFile, function(){
-                            docTreeBuild(function(){
-                                optimizeHandle(function(){
-                                    wsServer.send('reload', 'reload it!');
-                                    fn.timer.end();
+                            fn.copyFiles(config.projectPath + myFile, config.serverPath + 'static/' + myFile, function(){
+                                docTreeBuild(function(){
+                                    optimizeHandle(function(){
+                                        wsServer.send('reload', 'reload it!');
+                                        fn.timer.end();
+                                    });
                                 });
-                            });
 
-                        }, function(filename, textcontent){
-                            return render.init(filename, textcontent);
+                            }, function(filename, textcontent){
+                                return render.init(filename, textcontent);
+                            });
                         });
-                    });
+                    }
                 },
 
                 // 目录搭建
@@ -124,15 +107,16 @@ var render = {
                     });
                 };
 
-            wsServer.init();
+            op.live && wsServer.init();
 
             serverBuild(function(){
                 // 文件拷贝
                 fn.copyFiles(config.projectPath, config.serverPath + 'static/', function(){
                     docTreeBuild(function(){
-                        optimizeHandle(function(){
+                        she.optimize(function(){
                             fn.timer.end();
-                            fn.msg.line().success('release ok, start to watch');
+                            fn.msg.line().success('release ok');
+                            op.watch && fn.msg.notice('start to watch');
                             
                             watchHandle();
                         });
@@ -140,7 +124,11 @@ var render = {
                     });
                     
                 },/node_modules$/ig, function(filename, textcontent){
-                    return render.init(filename, textcontent);
+                    var r = render.init(filename, textcontent);
+                    if(wsServer.enable){
+                        r = wsServer.render(filename, r);
+                    }
+                    return r;
                     
                 });
             });
@@ -151,7 +139,11 @@ var render = {
             fn.help({
                 usage: 'jns release',
                 commands: {
-                    '-l': 'release project to localserver with livereload'
+                    'init': 'create the config file',
+                    '-l': 'release project to localserver with livereload',
+                    '-o': 'optimize project',
+                    '-w': 'watch project',
+                    '-d': 'output the project'
                 },
                 options: {
                     '-h, --help': 'output usage information'
@@ -161,24 +153,66 @@ var render = {
         }
     };///}
 
-module.exports = function(type) {
-    switch (type) {
-        case '-l':
-            release.staticServer();
-            break;
-       
-        case '-ol':
-            release.staticServer('o');
-            break;
+module.exports = function() {
+    var opt = {
+            live: false,
+            watch: false,
+            dest: undefined,
+            optimize: false
+        },
+        runInit,
+        runHelp;
 
-        case '-h':
-        case '--help':
-        default:
-            release.help();
-            break;
-        
+    for(var i = 0, myArgv, len = arguments.length; i < len; i++){
+        myArgv = arguments[i];
+        if(/^-[owlp]+$/.test(myArgv)){
+            ~myArgv.indexOf('o') && (opt.optimize = true);
+            ~myArgv.indexOf('l') && (opt.live = true);
+            ~myArgv.indexOf('w') && (opt.watch = true);
+            ~myArgv.indexOf('d') && (
+                opt.dest = arguments[++i] || './'
+            );
+           
+        } else {
+            switch(myArgv){
+                case '-o':
+                    opt.optimize = true;
+                    break;
+
+                case '-w':
+                    opt.watch = true;
+                    break;
+
+                case '-l':
+                    opt.live = true;
+                    break;
+
+                case '-d':
+                    opt.dest = arguments[++i] || './';
+                    break;
+
+                case 'init':
+                    runInit = true;
+                    break;
+
+                case '-h':
+                case '--h':
+                default:
+                    runHelp = true;
+                    break;
+            }
+        }
     }
 
+    if(runInit){
+        release.init();
+
+    } else if(runHelp){
+        release.help();
+        
+    } else {
+        release.staticServer(opt);
+    }
 
 };
 
