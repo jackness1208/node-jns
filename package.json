@@ -17,6 +17,8 @@
   },
   "devDependencies": {
     "node-watch": "^0.3.4",
-    "socket.io": "^1.3.5"
+    "socket.io": "^1.3.5",
+    "requirejs": "^2.1.19",
+    "uglify": "^0.1.5"
   }
 }

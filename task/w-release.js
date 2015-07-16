@@ -28,7 +28,7 @@ var render = {
     },
     
     release = {
-        staticServer: function(){
+        staticServer: function(optimize){///{
             fn.timer.start();
             var serverDoc = config.serverPath.replace(/\/$/, ''),
                 // server 环境搭建
@@ -42,6 +42,55 @@ var render = {
                         
                     });
                 },
+                // 压缩操作
+                optimizeHandle = function(callback){
+                    callback && callback();
+                    //TODO
+                    // if(!optimize){
+                    //     callback && callback();
+                    //     return;
+                    // }
+
+                    // var requirejs = require('requirejs'),
+                    //     myPath = config.serverPath + 'static/';
+                    // fn.getPaths(myPath, function(err, list){
+                    //     list.forEach(function(item, i){
+                    //         if(!/\.js$/.test(item)){
+                    //             return;
+                    //         }
+                    //         console.log(item);
+                    //         var myFile = myPath + item,
+                    //             config = {
+                    //                 baseUrl: myPath,
+                    //                 name: item,
+                    //                 out: item
+                    //             };
+                    //         requirejs.optimize(config);
+                    //     });
+                    // });
+                    // callback && callback();
+                },
+                // 监控操作
+                watchHandle = function(){
+                    watch(config.projectPath, function(filename){
+                        fn.timer.start();
+                        var myFile = fn.formatPath(filename).replace(config.projectPath,'');
+
+                        fn.copyFiles(config.projectPath + myFile, config.serverPath + 'static/' + myFile, function(){
+                            docTreeBuild(function(){
+                                optimizeHandle(function(){
+                                    wsServer.send('reload', 'reload it!');
+                                    fn.timer.end();
+                                });
+                            });
+
+                        }, function(filename, textcontent){
+                            return render.init(filename, textcontent);
+                        });
+                    });
+                },
+
+                // 目录搭建
                 docTreeBuild = function(callback){
                     fn.getPaths(config.projectPath, function(err, list){
                         var targetFile = config.serverPath + 'tpl/main/home.html',
@@ -69,8 +118,9 @@ var render = {
                                 }
                                 return myContent;
                             };
-                            fs.writeFileSync(targetFile, myRender(fs.readFileSync(sourceFile), options));
-                            callback && callback();
+                            
+                        fs.writeFileSync(targetFile, myRender(fs.readFileSync(sourceFile), options));
+                        callback && callback();
                     });
                 };
 
@@ -80,23 +130,13 @@ var render = {
                 // 文件拷贝
                 fn.copyFiles(config.projectPath, config.serverPath + 'static/', function(){
                     docTreeBuild(function(){
-                        fn.timer.end();
-                        fn.msg.line().success('release ok, start to watch');
-                        
-                        watch(config.projectPath, function(filename){
-                            fn.timer.start();
-                            var myFile = fn.formatPath(filename).replace(config.projectPath,'');
-
-                            fn.copyFiles(config.projectPath + myFile, config.serverPath + 'static/' + myFile, function(){
-                                docTreeBuild(function(){
-                                    wsServer.send('reload', 'reload it!');
-                                    fn.timer.end();   
-                                });
-
-                            }, function(filename, textcontent){
-                                return render.init(filename, textcontent);
-                            });
+                        optimizeHandle(function(){
+                            fn.timer.end();
+                            fn.msg.line().success('release ok, start to watch');
+                            
+                            watchHandle();
                         });
+                        
                     });
                     
                 },/node_modules$/ig, function(filename, textcontent){
@@ -119,7 +159,7 @@ var render = {
             });
             
         }
-    };
+    };///}
 
 module.exports = function(type) {
     switch (type) {
@@ -127,6 +167,10 @@ module.exports = function(type) {
             release.staticServer();
             break;
        
+        case '-ol':
+            release.staticServer('o');
+            break;
+
         case '-h':
         case '--help':
         default:
