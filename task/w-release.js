@@ -5,7 +5,14 @@ var inquirer = require("inquirer"),
     color = require('../lib/colors'),
     wsServer = require('../lib/wsServer'),
     fn = require('../lib/global'),
-    config = require('../lib/config');
+    config = require('../lib/config'),
+    userConfig = (function(){
+        try{
+            return require(config.userConfigFile);
+        } catch(er){
+            return undefined;
+        }
+    })();
 
 
 var render = {
@@ -28,49 +35,65 @@ var render = {
     },
     
     release = {
+        configFile: {
+            init: function(){
+                fn.copyFiles(config.basePath + 'init-files/config/jns-config.js', config.userConfigFile);
+                fn.msg.line().create('jns-config.js 创建完成');
+            }
+        },
         optimize: function(callback){
-            // TODO load jns-config
-            callback && callback();
+            // callback && callback();
+            if(typeof userConfig != 'object'){
+                fn.msg.error(config.userConfigFile + ' is not work');
+                return callback && callback();
+            }
+            var grunt = require('grunt'),
+                gruntConfig = {};
+            
+            // require(config.basePath + 'node_modules/grunt-contrib-requirejs')(grunt);
+            grunt.loadNpmTasks('grunt-contrib-requirejs');
+            // 数据处理
+            var optimizeConfig = userConfig.optimize;
+            if(optimizeConfig.requirejs){
+                // TODO 
+            }
+            
+            if(optimizeConfig.uglify){
+                // TODO 
+
+            }
+
+            if(optimizeConfig.sass){
+                //TODO
+            }
+
+            var taskArr = [];
+            for(var key in optimizeConfig){
+                optimizeConfig.hasOwnProperty(key) && taskArr.push(key);
+            }
+            grunt.task.run(taskArr);
         },
         
         staticServer: function(op){///{
             op = op || {};
-            console.log(op);
             fn.timer.start();
             var she = this,
                 serverDoc = config.serverPath.replace(/\/$/, ''),
-                // server 环境搭建
-                serverBuild = function(callback){
-                    if (!fs.existsSync(serverDoc)) {
-                        fs.mkdirSync(serverDoc);
-                    }
-
-                    fn.copyFiles(config.basePath + 'init-files/local-server/', config.serverPath, function() {
-                        callback && callback();
-                        
-                    });
-                },
                 
-                // 监控操作
-                watchHandle = function(){
-                    if(op.watch){
-                        watch(config.projectPath, function(filename){
-                            fn.timer.start();
-                            var myFile = fn.formatPath(filename).replace(config.projectPath,'');
-
-                            fn.copyFiles(config.projectPath + myFile, config.serverPath + 'static/' + myFile, function(){
-                                docTreeBuild(function(){
-                                    optimizeHandle(function(){
-                                        wsServer.send('reload', 'reload it!');
-                                        fn.timer.end();
-                                    });
-                                });
-
-                            }, function(filename, textcontent){
-                                return render.init(filename, textcontent);
-                            });
+                serverPath2Path = function(path, toPath, callback){
+                    // 文件拷贝
+                    fn.copyFiles(path, toPath, function(){
+                        docTreeBuild(function(){
+                            callback && callback();
                         });
-                    }
+
+                    },/node_modules$/ig, function(filename, textcontent){
+                        var r = render.init(filename, textcontent);
+                        if(wsServer.enable){
+                            r = wsServer.render(filename, r);
+                        }
+                        return r;
+                    });
                 },
 
                 // 目录搭建
@@ -107,32 +130,82 @@ var render = {
                     });
                 };
 
-            op.live && wsServer.init();
+            var promise = new fn.promise();
+            
+            
+            promise.then(function(res, next){ // websocket server start
+                op.live && wsServer.init();
+                next();
 
-            serverBuild(function(){
-                // 文件拷贝
-                fn.copyFiles(config.projectPath, config.serverPath + 'static/', function(){
-                    docTreeBuild(function(){
-                        she.optimize(function(){
+            }).then(function(res, next){ // optimize
+                release.optimize(function(){
+                    next();
+                });
+                
+            }).then(function(res, next){ // base static server build
+                if(op.create){
+                    if (!fs.existsSync(serverDoc)) {
+                        fs.mkdirSync(serverDoc);
+                    }
+
+                    fn.copyFiles(config.basePath + 'init-files/local-server/', config.serverPath, function() {
+                        
+                        serverPath2Path(config.projectPath, config.serverPath + 'static/', function(){
                             fn.timer.end();
                             fn.msg.line().success('release ok');
-                            op.watch && fn.msg.notice('start to watch');
-                            
-                            watchHandle();
+                            next();
                         });
                         
                     });
-                    
-                },/node_modules$/ig, function(filename, textcontent){
-                    var r = render.init(filename, textcontent);
-                    if(wsServer.enable){
-                        r = wsServer.render(filename, r);
-                    }
-                    return r;
-                    
-                });
-            });
-            
+
+                } else {
+                    next();
+                }
+
+            }).then(function(res, next){ // watch file
+                if(op.watch){
+                    fn.msg.notice('start to watch');
+
+                    watch(config.projectPath, function(filename){
+                        fn.timer.start();
+                        var myFile = fn.formatPath(filename).replace(config.projectPath,'');
+
+                        var promise = new fn.promise();
+
+                        promise.then(function(res, next){
+                            if(op.optimize){
+                                release.optimize(function(){
+                                    next();
+                                });
+
+                            } else {
+                                next();
+                            }
+
+                        }).then(function(res, next){
+                            if(op.create){
+                                serverPath2Path(config.projectPath + myFile, config.serverPath + 'static/' + myFile, function(){
+                                    op.live && wsServer.send('reload', 'reload it!');
+                                    next();
+                                });
+                            } else {
+                                next();
+                            }
+                            
+                        }).then(function(res, next){
+                            fn.timer.end();
+                            next();
+
+                        }).start();
+
+                        
+                    });
+                }
+
+                next();
+
+            }).start();
+
         },
 
         help: function(){
@@ -140,10 +213,11 @@ var render = {
                 usage: 'jns release',
                 commands: {
                     'init': 'create the config file',
-                    '-l': 'release project to localserver with livereload',
+                    '-l': 'web socket server start',
                     '-o': 'optimize project',
                     '-w': 'watch project',
-                    '-d': 'output the project'
+                    '-d': 'output the project',
+                    '-c': 'create locate server'
                 },
                 options: {
                     '-h, --help': 'output usage information'
@@ -158,17 +232,19 @@ module.exports = function() {
             live: false,
             watch: false,
             dest: undefined,
-            optimize: false
+            optimize: false,
+            create: false
         },
         runInit,
         runHelp;
 
     for(var i = 0, myArgv, len = arguments.length; i < len; i++){
         myArgv = arguments[i];
-        if(/^-[owlp]+$/.test(myArgv)){
+        if(/^-[cowlp]+$/.test(myArgv)){
             ~myArgv.indexOf('o') && (opt.optimize = true);
             ~myArgv.indexOf('l') && (opt.live = true);
             ~myArgv.indexOf('w') && (opt.watch = true);
+            ~myArgv.indexOf('c') && (opt.create = true);
             ~myArgv.indexOf('d') && (
                 opt.dest = arguments[++i] || './'
             );
@@ -177,6 +253,10 @@ module.exports = function() {
             switch(myArgv){
                 case '-o':
                     opt.optimize = true;
+                    break;
+
+                case '-c':
+                    opt.create = true;
                     break;
 
                 case '-w':
@@ -205,7 +285,7 @@ module.exports = function() {
     }
 
     if(runInit){
-        release.init();
+        release.configFile.init();
 
     } else if(runHelp){
         release.help();
