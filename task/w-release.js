@@ -35,23 +35,39 @@ var render = {
     },
     
     release = {
+        canWatch: true,
         configFile: {
             init: function(){
-                fn.copyFiles(config.basePath + 'init-files/config/jns-config.js', config.userConfigFile);
-                fn.msg.line().create('jns-config.js 创建完成');
+                if(fs.existsSync(config.userConfigFile)){
+                    fn.msg.error(config.userConfigFile + ' 已经存在，初始化失败');
+                } else {
+                    fn.copyFiles(config.basePath + 'init-files/config/jns-config.js', config.userConfigFile);
+                    fn.msg.line().create('jns-config.js 创建完成');
+                }
+                
             }
         },
+        watchTaskRunning: false,
         optimize: function(callback){
+            
             // callback && callback();
             if(typeof userConfig != 'object'){
                 fn.msg.error(config.userConfigFile + ' is not work');
                 return callback && callback();
             }
-            var grunt = require('grunt'),
-                gruntConfig = {};
+            process.chdir(config.basePath);
             
-            // require(config.basePath + 'node_modules/grunt-contrib-requirejs')(grunt);
+            var grunt = require('grunt'),
+                gruntConfig = {
+                pkg: grunt.file.readJSON(config.basePath + 'package.json')
+            };
+
             grunt.loadNpmTasks('grunt-contrib-requirejs');
+            grunt.loadNpmTasks('grunt-contrib-sass');
+            grunt.loadNpmTasks('grunt-contrib-uglify');
+
+            process.chdir(config.projectPath);
+
             // 数据处理
             var optimizeConfig = userConfig.optimize;
             if(optimizeConfig.requirejs){
@@ -69,9 +85,26 @@ var render = {
 
             var taskArr = [];
             for(var key in optimizeConfig){
-                optimizeConfig.hasOwnProperty(key) && taskArr.push(key);
+                optimizeConfig.hasOwnProperty(key) && (
+                    taskArr.push(key),
+                    gruntConfig[key] = optimizeConfig[key]
+                );
             }
+            grunt.initConfig(gruntConfig);
+            grunt.file.setBase(config.projectPath);
             grunt.task.run(taskArr);
+            grunt.task.options({
+                done: function(){
+                    fn.msg.success('optimize is done');
+                    callback && callback();
+                }
+            });
+            // grunt.task.options.done = function(){
+            //     fn.msg.success('optimize is done');
+            //     callback && callback();
+            // };
+            grunt.task.start();
+
         },
         
         staticServer: function(op){///{
@@ -138,9 +171,14 @@ var render = {
                 next();
 
             }).then(function(res, next){ // optimize
-                release.optimize(function(){
+                if(op.optimize){
+                    release.optimize(function(){
+                        next();
+                    });
+                } else {
                     next();
-                });
+                }
+                
                 
             }).then(function(res, next){ // base static server build
                 if(op.create){
@@ -162,12 +200,17 @@ var render = {
                     next();
                 }
 
-            }).then(function(res, next){ // watch file
+            }).then(function(res, next){ // watch files
                 if(op.watch){
                     fn.msg.notice('start to watch');
 
                     watch(config.projectPath, function(filename){
+                        if(release.watchTaskRunning){
+                            return;
+                        }
+                        release.watchTaskRunning = true;
                         fn.timer.start();
+
                         var myFile = fn.formatPath(filename).replace(config.projectPath,'');
 
                         var promise = new fn.promise();
@@ -185,7 +228,6 @@ var render = {
                         }).then(function(res, next){
                             if(op.create){
                                 serverPath2Path(config.projectPath + myFile, config.serverPath + 'static/' + myFile, function(){
-                                    op.live && wsServer.send('reload', 'reload it!');
                                     next();
                                 });
                             } else {
@@ -193,7 +235,20 @@ var render = {
                             }
                             
                         }).then(function(res, next){
+                            if(op.live){
+                                wsServer.send('reload', 'reload it!');
+                                next();
+
+                            } else {
+                                next();
+                            }
+                        }).then(function(res, next){
                             fn.timer.end();
+                            clearTimeout(release.watchTaskKey);
+                            release.watchTaskKey = setTimeout(function(){
+                                release.watchTaskRunning = false;
+
+                            }, 1000);
                             next();
 
                         }).start();
