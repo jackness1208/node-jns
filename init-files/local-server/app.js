@@ -37,7 +37,9 @@ app.configure(function() {
 	
 
 
-	
+    process.on('uncaughtException', function (err) {
+	    console.log(err);
+	});	
 	// uncaughtException 避免程序崩溃
 	// process.on('uncaughtException', function (err) {
 	//     console.log(err);

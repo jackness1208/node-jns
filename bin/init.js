@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 var myArgv = process.argv.splice(2);
 
+process.on('uncaughtException', function (err) {
+    console.log(err);
+});
+
 switch(myArgv[0]){
     case 'grunt':
         require(__dirname.replace("\\","/") + '/../task/w-grunt.js').apply(global, myArgv.slice(1));
