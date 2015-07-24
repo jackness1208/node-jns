@@ -6,7 +6,12 @@ module.exports = function(type){
         usage: 'jns',
         commands: {
             'grunt': 'grunt commands',
-            'mod': 'modUi commands'
+            'mod': 'modUi commands',
+            'release': 'release commands',
+            'rename': 'multiple rename tools',
+            'reptile': 'web reptile apps',
+            'release': 'web produce actions',
+            'server': 'local server commands'
         },
         options: {
             '-h, --help': 'output usage information',

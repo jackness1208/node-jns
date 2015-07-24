@@ -1,3 +1,5 @@
+
+
 var inquirer = require("inquirer"),
     readline = require('readline'),
     watch = require('node-watch'),
@@ -55,55 +57,83 @@ var render = {
                 fn.msg.error(config.userConfigFile + ' is not work');
                 return callback && callback();
             }
-            process.chdir(config.basePath);
+
+            var promise = new fn.promise();
             
-            var grunt = require('grunt'),
-                gruntConfig = {
-                pkg: grunt.file.readJSON(config.basePath + 'package.json')
-            };
-
-            grunt.loadNpmTasks('grunt-contrib-requirejs');
-            grunt.loadNpmTasks('grunt-contrib-sass');
-            grunt.loadNpmTasks('grunt-contrib-uglify');
-
-            process.chdir(config.projectPath);
-
-            // 数据处理
-            var optimizeConfig = userConfig.optimize;
-            if(optimizeConfig.requirejs){
-                // TODO 
-            }
-            
-            if(optimizeConfig.uglify){
-                // TODO 
-
-            }
-
-            if(optimizeConfig.sass){
-                //TODO
-            }
-
-            var taskArr = [];
-            for(var key in optimizeConfig){
-                optimizeConfig.hasOwnProperty(key) && (
-                    taskArr.push(key),
-                    gruntConfig[key] = optimizeConfig[key]
-                );
-            }
-            grunt.initConfig(gruntConfig);
-            grunt.file.setBase(config.projectPath);
-            grunt.task.run(taskArr);
-            grunt.task.options({
-                done: function(){
-                    fn.msg.success('optimize is done');
-                    callback && callback();
+            promise.then(function(res,next){
+                if(userConfig.devDependencies && userConfig.devDependencies.length){
+                    var myPackage = [];
+                    userConfig.devDependencies.forEach(function(item, i){
+                        if(!fs.existsSync(config.basePath + 'node_modules/' + item)){
+                            myPackage.push(item);
+                        }
+                    });
+                    if(myPackage.length){
+                        fn.runCMD('npm install ' + myPackage.join(' ') + ' --save-dev', function(){
+                            next(myPackage);
+                        }, config.basePath);
+                    } else {
+                        next();
+                    }
+                } else {
+                    next();
                 }
-            });
-            // grunt.task.options.done = function(){
-            //     fn.msg.success('optimize is done');
-            //     callback && callback();
-            // };
-            grunt.task.start();
+
+            }).then(function(packages, next){
+                process.chdir(config.basePath);
+            
+                var grunt = require('grunt'),
+                    gruntConfig = {
+                    pkg: grunt.file.readJSON(config.basePath + 'package.json' )
+                };
+                
+                for(var key in gruntConfig.pkg.devDependencies){
+                    if( gruntConfig.pkg.devDependencies.hasOwnProperty(key) ){
+                        ~key.indexOf('grunt-') && grunt.loadNpmTasks(key);
+                    }
+                }
+
+                packages && packages.forEach(function(name, i){
+                    grunt.loadNpmTasks(name);
+                });
+
+                process.chdir(config.projectPath);
+                
+                // 数据处理
+                var optimizeConfig = userConfig.optimize;
+
+                var taskArr = [];
+                for(var key in optimizeConfig){
+                    optimizeConfig.hasOwnProperty(key) && (
+                        taskArr.push(key),
+                        gruntConfig[key] = optimizeConfig[key]
+                    );
+                }
+                grunt.option('force', true);
+                grunt.initConfig(gruntConfig);
+                grunt.file.setBase(config.projectPath);
+                grunt.task.run(taskArr);
+                grunt.task.options({
+                    error: function(er){
+                        fn.msg.error(er);
+                        return false;
+                    },
+                    done: function(){
+                        fn.msg.success('optimize is done');
+                        callback && callback();
+                    }
+                });
+                // grunt.task.options.done = function(){
+                //     fn.msg.success('optimize is done');
+                //     callback && callback();
+                // };
+                grunt.task.start();
+                next();
+
+
+            }).start();
+
+            
 
         },
         
@@ -272,7 +302,8 @@ var render = {
                     '-o': 'optimize project',
                     '-w': 'watch project',
                     '-d': 'output the project',
-                    '-c': 'create locate server'
+                    '-c': 'create locate server',
+                    '-g': 'run grunt task'
                 },
                 options: {
                     '-h, --help': 'output usage information'
