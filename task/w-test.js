@@ -8,22 +8,27 @@ var inquirer = require("inquirer"),
 
 module.exports = function(){
     
-    var promise = new fn.promise();
+    // var http = require('http');
+    console.log(require('url').parse('http://www.baidu.com'))
+    // http.get('http://www.baidu.com/', function(result){
+    //     var chunks = [],
+    //         size = 0;
 
-    promise.then(function(resolve){
-        console.log('w1');
-        resolve();
+    //     result.on('data', function(chunk){
+    //         size += chunk.length;
+    //         chunks.push(chunk);
 
-    }).then(function(resolve){
-        console.log('w2')
-        setTimeout(function(){
-            resolve();
-        }, 2000);
+    //     });
+    //     console.log(result);
 
-    }).then(function(resolve){
-        console.log('w3');
-    }).start();
-    console.log('?');
+    //     result.on('end', function(){
+    //         var myBuffer = Buffer.concat(chunks, size),
+    //             r;
+
+    //         console.log(String(myBuffer))
+
+    //     });
+    // });
 };
 
 

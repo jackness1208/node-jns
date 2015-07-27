@@ -60,7 +60,7 @@ var render = {
 
             var promise = new fn.promise();
             
-            promise.then(function(res,next){
+            promise.then(function(next){
                 if(userConfig.devDependencies && userConfig.devDependencies.length){
                     var myPackage = [];
                     userConfig.devDependencies.forEach(function(item, i){
@@ -73,10 +73,10 @@ var render = {
                             next(myPackage);
                         }, config.basePath);
                     } else {
-                        next();
+                        next(false);
                     }
                 } else {
-                    next();
+                    next(false);
                 }
 
             }).then(function(packages, next){
@@ -196,11 +196,11 @@ var render = {
             var promise = new fn.promise();
             
             
-            promise.then(function(res, next){ // websocket server start
+            promise.then(function(next){ // websocket server start
                 op.live && wsServer.init();
                 next();
 
-            }).then(function(res, next){ // optimize
+            }).then(function(next){ // optimize
                 if(op.optimize){
                     release.optimize(function(){
                         next();
@@ -210,7 +210,7 @@ var render = {
                 }
                 
                 
-            }).then(function(res, next){ // base static server build
+            }).then(function(next){ // base static server build
                 if(op.create){
                     if (!fs.existsSync(serverDoc)) {
                         fs.mkdirSync(serverDoc);
@@ -230,7 +230,7 @@ var render = {
                     next();
                 }
 
-            }).then(function(res, next){ // watch files
+            }).then(function(next){ // watch files
                 if(op.watch){
                     fn.msg.notice('start to watch');
 
@@ -245,7 +245,7 @@ var render = {
 
                         var promise = new fn.promise();
 
-                        promise.then(function(res, next){
+                        promise.then(function(next){
                             if(op.optimize){
                                 release.optimize(function(){
                                     next();
@@ -255,7 +255,7 @@ var render = {
                                 next();
                             }
 
-                        }).then(function(res, next){
+                        }).then(function(next){
                             if(op.create){
                                 serverPath2Path(config.projectPath + myFile, config.serverPath + 'static/' + myFile, function(){
                                     next();
@@ -264,7 +264,7 @@ var render = {
                                 next();
                             }
                             
-                        }).then(function(res, next){
+                        }).then(function(next){
                             if(op.live){
                                 wsServer.send('reload', 'reload it!');
                                 next();
@@ -272,7 +272,7 @@ var render = {
                             } else {
                                 next();
                             }
-                        }).then(function(res, next){
+                        }).then(function(next){
                             fn.timer.end();
                             clearTimeout(release.watchTaskKey);
                             release.watchTaskKey = setTimeout(function(){
