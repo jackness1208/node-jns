@@ -139,7 +139,6 @@ var render = {
         
         staticServer: function(op){///{
             op = op || {};
-            fn.timer.start();
             var she = this,
                 serverDoc = config.serverPath.replace(/\/$/, ''),
                 
@@ -210,24 +209,48 @@ var render = {
                 }
                 
                 
-            }).then(function(next){ // base static server build
+            }).then(function(NEXT){ // base static server build
                 if(op.create){
-                    if (!fs.existsSync(serverDoc)) {
-                        fs.mkdirSync(serverDoc);
-                    }
+                    fn.timer.start();
+                    var myPromise = new fn.promise();
 
-                    fn.copyFiles(config.basePath + 'init-files/local-server/', config.serverPath, function() {
-                        
-                        serverPath2Path(config.projectPath, config.serverPath + 'static/', function(){
-                            fn.timer.end();
-                            fn.msg.line().success('release ok');
+                    myPromise.then(function(next){
+                        if (!fs.existsSync(serverDoc)) {
+                            fs.mkdirSync(serverDoc);
+                        }
+                        next();
+                    }).then(function(next){
+                        fn.copyFiles(config.basePath + 'init-files/local-server/', config.serverPath, function() {
                             next();
                         });
-                        
-                    });
+                    }).then(function(next){
+                        serverPath2Path(config.projectPath, config.serverPath + 'static/', function(){
+                            next();
+                        });
+
+                    }).then(function(next){
+                        fn.msg.nowrap('', true);
+                        fn.runCMD('npm install', function(){
+                            next();
+
+                        }, config.serverPath);
+
+                    }).then(function(next){
+                        fn.runCMD('node app', function(){
+                        }, config.serverPath);
+                        next();
+
+                    }).then(function(next){
+                        fn.timer.end();
+                        fn.msg.line().success('release ok');
+
+                        NEXT();
+
+                    }).start();
+                    
 
                 } else {
-                    next();
+                    NEXT();
                 }
 
             }).then(function(next){ // watch files

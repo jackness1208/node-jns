@@ -32,6 +32,12 @@ a{ text-decoration: none; color:#333; }
 .treelist a{ color:#1d77bc; display: block;  overflow: hidden;}
 .treelist a:hover{ color:blue;  text-decoration: underline;}
 
+.treelist-li-cur{}
+.treelist-li-cur .tree-tl-doc{}
+.treelist-li-cur .tree-tl-doc .tree-icon{background:#eee;}
+.treelist-li-cur .tree-tl-doc .tree-icon-cnt{ background:#eee; }
+.treelist-li-cur ul{ display:none; }
+
 .tree-tl-doc{}
 .tree-tl-doc a{ cursor: default; color:#444;}
 .tree-tl-doc a:hover{ color:#444; text-decoration: none; }
@@ -110,6 +116,24 @@ var treeData = {{treeData}};
             return r;
         }
     treeList.innerHTML = buildItem(treeData);
+    
+    // 绑定事件
+    var docItems = [],
+        i, len, fs, myDiv,
+        docClickHandle = function(){
+            var myParent = this.parentNode;
+            ~myParent.className.indexOf('-cur')?(
+                myParent.className = myParent.className.replace(/\s*treelist-li-cur\s*/g, ' ')
+            ):(
+                myParent.className += ' treelist-li-cur'
+            );
+        };
+    for(i = 0, myDiv = treeList.getElementsByTagName('div'), len = myDiv.length; i < len; i++){
+        ~myDiv[i].className.indexOf('tree-tl-doc') && docItems.push(myDiv[i]);
+    }
+    for(i = 0, len = docItems.length; i < len; i++){
+        docItems[i].onclick = docClickHandle;
+    }
 }(this);
 </script>
 </body>
