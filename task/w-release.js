@@ -165,6 +165,7 @@ var render = {
                             sourceFile = config.basePath + 'init-files/local-server/tpl/main/home.html',
                             options = {
                                 'treeData': fn.pathsFormat(list, '/'),
+                                'serverAddress': config.serverAdress
                             },
                             myRender = function(content, op){
                                 var myContent = render.init(targetFile, content),
