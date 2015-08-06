@@ -7,28 +7,31 @@ var inquirer = require("inquirer"),
     config = require('../lib/config');
 
 module.exports = function(){
-    
-    // var http = require('http');
-    console.log(require('url').parse('http://www.baidu.com'))
-    // http.get('http://www.baidu.com/', function(result){
-    //     var chunks = [],
-    //         size = 0;
+    var app = require('http').createServer(handler)
+    var io = require('socket.io')(app);
+    var fs = require('fs');
 
-    //     result.on('data', function(chunk){
-    //         size += chunk.length;
-    //         chunks.push(chunk);
+    app.listen(80);
 
-    //     });
-    //     console.log(result);
+    function handler (req, res) {
+        fs.readFile(__dirname + '/index.html',
+        function (err, data) {
+            if (err) {
+              res.writeHead(500);
+              return res.end('Error loading index.html');
+            }
 
-    //     result.on('end', function(){
-    //         var myBuffer = Buffer.concat(chunks, size),
-    //             r;
+            res.writeHead(200);
+            res.end(data);
+        });
+    }
 
-    //         console.log(String(myBuffer))
-
-    //     });
-    // });
+    io.on('connection', function (socket) {
+    socket.emit('news', { hello: 'world' });
+    socket.on('my other event', function (data) {
+        console.log(data);
+    });
+    }); 
 };
 
 
