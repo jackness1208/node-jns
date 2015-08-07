@@ -1,3 +1,5 @@
+var os = require('os');
+
 module.exports = {
 	// 站点目录
 	sitePath: __dirname.replace(/\\/g,'/') + '/../../',
@@ -30,5 +32,22 @@ module.exports = {
 	    password : '123456',
 	    database : 'admin',
 	    connectionLimit: 50
-	}
+	},
+    serverAdress: (function(){
+        var ipObj = os.networkInterfaces(),
+            ipArr;
+        for(var key in ipObj){
+            if(ipObj.hasOwnProperty(key)){
+                ipArr = ipObj[key];
+                for(var fip, i = 0, len = ipArr.length; i < len; i++){
+                    fip = ipArr[i];
+                    if(fip.family.toLowerCase() == 'ipv4' && !fip.internal){
+                        return fip.address;
+                    }
+                }
+            }
+        }
+        
+        return '127.0.0.1';
+    })()
 };

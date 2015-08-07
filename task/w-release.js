@@ -43,6 +43,8 @@ var render = {
                 if(fs.existsSync(config.userConfigFile)){
                     fn.msg.error(config.userConfigFile + ' 已经存在，初始化失败');
                 } else {
+                    
+
                     fn.copyFiles(config.basePath + 'init-files/config/jns-config.js', config.userConfigFile);
                     fn.msg.line().create('jns-config.js 创建完成');
                 }
@@ -52,11 +54,44 @@ var render = {
         watchTaskRunning: false,
         optimize: function(callback){
             
-            // callback && callback();
-            if(typeof userConfig != 'object'){
+            if(typeof userConfig == 'object'){
+                console.log(userConfig)
+
+            } else if(fs.existsSync(config.projectPath + 'Gruntfile.js') && fs.existsSync(config.projectPath + 'package.json')){
+                !function(){
+                    var grunt = require('grunt');
+                    
+                    var myGrunt = {
+                            loadNpmTasks: function(){},
+                            registerTask: function(){},
+                            registerMultiTask: function(){},
+                            file: grunt.file,
+                            task: grunt.task,
+                            initConfig: function(config){
+                                this.config = config;
+                            },
+                            util: grunt.util,
+                            fail: grunt.fail,
+                            log: grunt.log,
+                            option: grunt.option,
+                            template: grunt.template
+                        };
+
+
+                    require(config.projectPath + 'Gruntfile.js')(myGrunt);
+
+                    userConfig = {
+                        devDependencies: JSON.parse(fs.readFileSync(config.projectPath + 'package.json')).devDependencies,
+                        optimize: myGrunt.config
+                    };
+                    delete userConfig.optimize.pkg;
+                }();
+
+            } else {
                 fn.msg.error(config.userConfigFile + ' is not work');
                 return callback && callback();
             }
+
 
             var promise = new fn.promise();
             
@@ -86,6 +121,7 @@ var render = {
                     gruntConfig = {
                     pkg: grunt.file.readJSON(config.basePath + 'package.json' )
                 };
+
                 
                 for(var key in gruntConfig.pkg.devDependencies){
                     if( gruntConfig.pkg.devDependencies.hasOwnProperty(key) ){

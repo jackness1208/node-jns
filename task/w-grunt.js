@@ -77,6 +77,26 @@ var gn = {
                             fn.msg.error(err.message);
                         }
                     }, /node_module|package.js$/i);
+                },
+
+                grunt4Optimize: function(){
+                    fs.writeFile(config.projectPath + '/package.js', JSON.stringify(packageConfig, null, 4), function(err) {
+                        if (!err) {
+                            fn.msg.success('文件创建成功 - package.js')
+                        } else {
+                            console.log('[error] ' + err.message);
+                        }
+
+                    });
+
+
+                    fn.copyPathFiles(config.basePath + 'init-files/grunt-optimize/', config.projectPath, function(err) {
+                        if (!err) {
+                            fn.msg.line().success('文件初始化完成');
+                        } else {
+                            fn.msg.error(err.message);
+                        }
+                    }, /node_module|package.js$/i);
                 }
             };
 
@@ -108,9 +128,9 @@ var gn = {
             }, {
                 name: 'type',
                 message: '模板选择',
-                default: 'grunt for uglify',
+                default: 'grunt orginal',
                 type: 'list',
-                choices: ['grunt for uglify', 'grunt + express', ]
+                choices: ['grunt for uglify', 'grunt + express', 'grunt orginal']
             }
 
 
@@ -127,6 +147,10 @@ var gn = {
 
                 case 'grunt + express':
                     create.grunt4Express();
+                    break;
+
+                case 'grunt orginal':
+                    create.grunt4Optimize();
                     break;
 
                 default:
