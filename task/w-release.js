@@ -27,7 +27,7 @@ var render = {
                     return render.html(content);
 
                 default:
-                    return content + '';
+                    return content;
             }
         },
         html: function(content){
@@ -68,7 +68,12 @@ var render = {
                             file: grunt.file,
                             task: grunt.task,
                             initConfig: function(config){
-                                this.config = config;
+                                this.config = {};
+                                for(var key in config){
+                                    if(config.hasOwnProperty(key)){
+                                        !~key.indexOf('watch') && (this.config[key] = config[key]);
+                                    }
+                                }
                             },
                             util: grunt.util,
                             fail: grunt.fail,

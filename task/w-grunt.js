@@ -32,9 +32,9 @@ var gn = {
                     packageConfig.dependencies = {
                         "express": "3.x"
                     };
-                    fs.writeFile(config.projectPath + '/package.js', JSON.stringify(packageConfig, null, 4), function(err) {
+                    fs.writeFile(config.projectPath + '/package.json', JSON.stringify(packageConfig, null, 4), function(err) {
                         if (!err) {
-                            fn.msg.success('文件创建成功 - package.js')
+                            fn.msg.success('文件创建成功 - package.json')
                         } else {
                             console.log('[error] ' + err.message);
                         }
@@ -60,9 +60,9 @@ var gn = {
                         "mysql": "*"
                     };
 
-                    fs.writeFile(config.projectPath + '/package.js', JSON.stringify(packageConfig, null, 4), function(err) {
+                    fs.writeFile(config.projectPath + '/package.json', JSON.stringify(packageConfig, null, 4), function(err) {
                         if (!err) {
-                            fn.msg.success('文件创建成功 - package.js')
+                            fn.msg.success('文件创建成功 - package.json')
                         } else {
                             console.log('[error] ' + err.message);
                         }
@@ -70,19 +70,19 @@ var gn = {
                     });
 
 
-                    fn.copyPathFiles(config.basePath + 'init-files/grunt-express/', config.projectPath, function(err) {
+                    fn.copyFiles(config.basePath + 'init-files/grunt-express/', config.projectPath, function(err) {
                         if (!err) {
                             fn.msg.line().success('文件初始化完成');
                         } else {
                             fn.msg.error(err.message);
                         }
-                    }, /node_module|package.js$/i);
+                    }, /node_module|package.json$/i);
                 },
 
                 grunt4Optimize: function(){
-                    fs.writeFile(config.projectPath + '/package.js', JSON.stringify(packageConfig, null, 4), function(err) {
+                    fs.writeFile(config.projectPath + '/package.json', JSON.stringify(packageConfig, null, 4), function(err) {
                         if (!err) {
-                            fn.msg.success('文件创建成功 - package.js')
+                            fn.msg.success('文件创建成功 - package.json')
                         } else {
                             console.log('[error] ' + err.message);
                         }
@@ -90,13 +90,13 @@ var gn = {
                     });
 
 
-                    fn.copyPathFiles(config.basePath + 'init-files/grunt-optimize/', config.projectPath, function(err) {
+                    fn.copyFiles(config.basePath + 'init-files/grunt-optimize/', config.projectPath, function(err) {
                         if (!err) {
                             fn.msg.line().success('文件初始化完成');
                         } else {
                             fn.msg.error(err.message);
                         }
-                    }, /node_module|package.js$/i);
+                    }, /node_module|package.json$/i);
                 }
             };
 

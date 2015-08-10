@@ -3,191 +3,76 @@ module.exports = function(grunt) {
     // 项目配置
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
-        requirejs: {
-            'tieba-index': {
-                options: {
-                    baseUrl: "js",
-                    name: "index-debug",
-                    out: "js/index.js",
-                    paths: {
-                        zepto: 'lib/zepto.min',
-                        hiido: 'commons/hiido_click',
-                        checkOSAndYYVer: 'checkOSAndYYVer'
-                    },
-                    shim: {
-                        zepto: {
-                            exports: '$'
-                        },
-                        checkOSAndYYVer: {
-                            deps: ['zepto']
-                        },
-                        hiido: {
-                            exports: 'hiido'
-                        }
-                    }
+        // requirejs: {
+        //     'tieba-index': {
+        //         options: {
+        //             baseUrl: "js",
+        //             name: "index-debug",
+        //             out: "js/index.js",
+        //             paths: {
+        //                 zepto: 'lib/zepto.min',
+        //                 hiido: 'commons/hiido_click',
+        //                 checkOSAndYYVer: 'checkOSAndYYVer'
+        //             },
+        //             shim: {
+        //                 zepto: {
+        //                     exports: '$'
+        //                 },
+        //                 checkOSAndYYVer: {
+        //                     deps: ['zepto']
+        //                 },
+        //                 hiido: {
+        //                     exports: 'hiido'
+        //                 }
+        //             }
 
-                }
-            },
-            'tieba-detail': {
-                options: {
-                    baseUrl: "js",
-                    name: "detail-debug",
-                    out: "js/detail.js",
-                    paths: {
-                        zepto: 'lib/zepto.min',
-                        lazyload: 'lib/zepto.lazyload.min',
-                        checkOSAndYYVer: 'checkOSAndYYVer',
-                        hiido: 'commons/hiido_click'
-                            // jsBridge: 'lib/WAJavascriptBridge',
-                            // yymobile_api: 'http://res0.3g.yystatic.com/js/yymobile_api_v1.2.12.min'
-                    },
-                    shim: {
-                        zepto: {
-                            exports: '$'
-                        },
-                        lazyload: {
-                            deps: ['zepto']
-                        },
-                        checkOSAndYYVer: {
-                            deps: ['zepto']
-                        },
-                        hiido: {
-                            exports: 'hiido'
-                        }
+        //         }
+        //     }
+        // },
 
-                    }
-                }
-            },
-            'tieba-editPost': {
-                options: {
-                    baseUrl: "js",
-                    name: "editPost-debug",
-                    out: "js/editPost.js",
-                    paths: {
-                        //plugin
-                        // text: 'text',
-                        zepto: 'lib/zepto.min',
-                        checkOSAndYYVer: 'checkOSAndYYVer',
-                        jsBridge: 'lib/WAJavascriptBridge',
-                        hiido: 'commons/hiido_click'
-                    },
+        // uglify: {
+        //     "mod": {
+        //         "options": {
+        //             "banner": "/*! builded <%= grunt.template.today() %> */\r\n",
+        //             "sourceMapRoot": "../../",
+        //             // 是否生成 sourceMap
+        //             sourceMap: true,
+        //             // 生成 map文件的地址
+        //             sourceMapName: function(path){
+        //                 var f = path.split("/"),
+        //                     filename = f.pop(),
+        //                     nav = f.join("/") + "/";
 
-                    shim: {
-                        zepto: {
-                            exports: '$'
-                        },
-                        checkOSAndYYVer: {
-                            deps: ['zepto']
-                        },
-                        jsBridge: {
-                            exports: 'JsBridge'
-                        }
-                    }
-                }
-            },
-            'tieba-commentDetail': {
-                options: {
-                    baseUrl: "js",
-                    name: "commentDetail-debug",
-                    out: "js/commentDetail.js",
-                    paths: {
-                        //plugin
-                        // text: 'text',
-                        zepto: 'lib/zepto.min',
-                        lazyload: 'lib/zepto.lazyload.min',
-                        hiido: 'commons/hiido_click'
-                    },
-
-                    shim: {
-                        zepto: {
-                            exports: '$'
-                        },
-                        lazyload: {
-                            deps: ['zepto']
-                        },
-                        hiido: {
-                            exports: 'hiido'
-                        }
-                    }
-                }
-            },
-            'tieba-css-index': {
-                options:{
-                    cssIn: 'css/page/p-index.css',
-                    out: 'css/index.css'
-                }
-            },
-            'tieba-css-commentDetail': {
-                options:{
-                    cssIn: 'css/page/p-commentDetail.css',
-                    out: 'css/commentDetail.css'
-                }
-            },
-            'tieba-css-default': {
-                options:{
-                    cssIn: 'css/page/p-default.css',
-                    out: 'css/default.css'
-                }
-            },
-            'tieba-css-detail': {
-                options:{
-                    cssIn: 'css/page/p-detail.css',
-                    out: 'css/detail.css'
-                }
-            },
-            'tieba-css-edit-manage': {
-                options:{
-                    cssIn: 'css/page/p-edit-manage.css',
-                    out: 'css/edit-manage.css'
-                }
-            },
-            'tieba-css-editPost': {
-                options:{
-                    cssIn: 'css/page/p-editPost.css',
-                    out: 'css/editPost.css'
-                }
-            },
-            'tieba-css-emotions': {
-                options:{
-                    cssIn: 'css/page/p-emotions.css',
-                    out: 'css/emotions.css'
-                }
-            },
-            'tieba-css-likeList': {
-                options:{
-                    cssIn: 'css/page/p-likeList.css',
-                    out: 'css/likeList.css'
-                }
-            },
-            'tieba-css-post': {
-                options:{
-                    cssIn: 'css/page/p-post.css',
-                    out: 'css/post.css'
-                }
-            },
-            'tieba-css-replyFloor': {
-                options:{
-                    cssIn: 'css/page/p-replyFloor.css',
-                    out: 'css/replyFloor.css'
-                }
-            },
-            'tieba-css-user-manage': {
-                options:{
-                    cssIn: 'css/page/p-user-manage.css',
-                    out: 'css/user-manage.css'
-                }
-            }
-        },
+        //                 return nav + "map/" +  filename.replace('.js','.map');
+        //             },
+        //             // 用于定义 map文件地址 并放在压缩文件底部， url相对于 压缩文件
+        //             sourceMappingURL: function(path){
+        //                 var f = path.split("/"),
+        //                     filename = f.pop(),
+        //                     nav = f.join("/") + "/";
+        //                 return "map/" +  filename.replace('.js','.map');
+        //             }
+        //         },
+        //         "files": {
+        //             "mod/js/lib/dist/bs_global.min.js": [
+        //                 "mod/js/lib/src/bs_global.js"
+        //             ],
+        //             "mod/js/lib/dist/jns_calendar.min.js": [
+        //                 "mod/js/lib/src/jns_calendar.js"
+        //             ]
+        //         }
+        //     }
+        // },
         
-        copy: {
-            'tieba': {
-                files: [
-                    {expand: true, src: ['js/**'], dest: '../../../../../../static/resource/mobile/'},
-                    {expand: true, src: ['css/**'], dest: '../../../../../../static/resource/mobile/'},
-                    {expand: true, src: ['images/**'], dest: '../../../../../../static/resource/mobile/'}
-                ]
-            }
-        }
+        // copy: {
+        //     'tieba': {
+        //         files: [
+        //             {expand: true, src: ['js/**'], dest: '../../../../../../static/resource/mobile/'},
+        //             {expand: true, src: ['css/**'], dest: '../../../../../../static/resource/mobile/'},
+        //             {expand: true, src: ['images/**'], dest: '../../../../../../static/resource/mobile/'}
+        //         ]
+        //     }
+        // }
     });
     
 
