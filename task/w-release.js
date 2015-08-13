@@ -1,5 +1,3 @@
-
-
 var inquirer = require("inquirer"),
     readline = require('readline'),
     watch = require('node-watch'),
@@ -37,7 +35,6 @@ var render = {
     },
     
     release = {
-        canWatch: true,
         configFile: {
             init: function(){
                 if(fs.existsSync(config.userConfigFile)){
@@ -51,8 +48,7 @@ var render = {
                 
             }
         },
-        watchTaskRunning: false,
-        optimize: function(callback){
+        optimize: function(callback){///{
             
             if(typeof userConfig == 'object'){
                 console.log(userConfig)
@@ -176,9 +172,9 @@ var render = {
 
             
 
-        },
+        },///}
         
-        staticServer: function(op){///{
+        init: function(op){///{
             op = op || {};
             var she = this,
                 serverDoc = config.serverPath.replace(/\/$/, ''),
@@ -297,59 +293,68 @@ var render = {
 
             }).then(function(next){ // watch files
                 if(op.watch){
-                    fn.msg.notice('start to watch');
-
-                    watch(config.projectPath, function(filename){
-                        if(release.watchTaskRunning){
-                            return;
-                        }
-                        release.watchTaskRunning = true;
-                        fn.timer.start();
-
-                        var myFile = fn.formatPath(filename).replace(config.projectPath,'');
-
-                        var promise = new fn.promise();
-
-                        promise.then(function(next){
-                            if(op.optimize){
-                                release.optimize(function(){
+                    
+                    var fileArr = [],
+                        isRunning = false,
+                        watchTimeoutKey,
+                        watchInterval = 2000,
+                        watchHandle = function(){///{
+                            new fn.promise().then(function(next){
+                                clearTimeout(watchTimeoutKey);
+                                if(!fileArr.length || isRunning){
+                                    return;
+                                } else {
+                                    isRunning = true;
                                     next();
-                                });
+                                }
 
-                            } else {
-                                next();
-                            }
-
-                        }).then(function(next){
-                            if(op.create){
-                                serverPath2Path(config.projectPath + myFile, config.serverPath + 'static/' + myFile, function(){
+                            }).then(function(next){ // optimize
+                                if(op.optimize){
+                                    release.optimize(function(){
+                                        next();
+                                    });
+                                } else {
                                     next();
-                                });
-                            } else {
+                                }
+
+                            }).then(function(next){ // copy to local server
+                                if(op.create){
+                                    console.log('copy')
+                                    serverPath2Path(config.projectPath, config.serverPath + 'static/', function(){
+                                        fileArr = [];
+                                        next();
+                                    });
+                                            
+                                } else {
+                                    next();
+                                }
+
+                            }).then(function(next){ // websocket
+                                if(op.live){
+                                    wsServer.send('reload', 'reload it!');
+                                    next();
+
+                                } else {
+                                    next();
+                                }
+
+                            }).then(function(next){
+                                fn.timer.end();
                                 next();
-                            }
-                            
-                        }).then(function(next){
-                            if(op.live){
-                                wsServer.send('reload', 'reload it!');
+                            }).then(function(next){
+                                isRunning = false;
+                                watchTimeoutKey = setTimeout(watchHandle, watchInterval);
                                 next();
 
-                            } else {
-                                next();
-                            }
-                        }).then(function(next){
-                            fn.timer.end();
-                            clearTimeout(release.watchTaskKey);
-                            release.watchTaskKey = setTimeout(function(){
-                                release.watchTaskRunning = false;
+                            }).start();
+                        };///}
 
-                            }, 1000);
-                            next();
-
-                        }).start();
-
-                        
+                    watch(config.projectPath, function(file){
+                        fileArr.push(file);
+                        watchHandle();
                     });
+                    
+                    fn.msg.notice('start to watch');
                 }
 
                 next();
@@ -442,7 +447,7 @@ module.exports = function() {
         release.help();
         
     } else {
-        release.staticServer(opt);
+        release.init(opt);
     }
 
 };
