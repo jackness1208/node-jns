@@ -94,7 +94,7 @@ var render = {
             }
 
 
-            var promise = new fn.promise();
+            var promise = new fn.Promise();
             
             promise.then(function(next){
                 if(userConfig.devDependencies && userConfig.devDependencies.length){
@@ -230,7 +230,7 @@ var render = {
                     });
                 };
 
-            var promise = new fn.promise();
+            var promise = new fn.Promise();
             
             
             promise.then(function(next){ // websocket server start
@@ -250,7 +250,7 @@ var render = {
             }).then(function(NEXT){ // base static server build
                 if(op.create){
                     fn.timer.start();
-                    var myPromise = new fn.promise();
+                    var myPromise = new fn.Promise();
 
                     myPromise.then(function(next){
                         if (!fs.existsSync(serverDoc)) {
@@ -299,7 +299,7 @@ var render = {
                         watchTimeoutKey,
                         watchInterval = 2000,
                         watchHandle = function(){///{
-                            new fn.promise().then(function(next){
+                            new fn.Promise().then(function(next){
                                 clearTimeout(watchTimeoutKey);
                                 if(!fileArr.length || isRunning){
                                     return;
