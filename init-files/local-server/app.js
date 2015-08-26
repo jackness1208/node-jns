@@ -40,25 +40,12 @@ app.configure(function() {
     process.on('uncaughtException', function (err) {
 	    console.log(err);
 	});	
-	// uncaughtException 避免程序崩溃
-	// process.on('uncaughtException', function (err) {
-	//     console.log(err);
-
-	//     try {
-	//         var killTimer = setTimeout(function () {
-	//             process.exit(1);
-	//         }, 30000);
-	//         killTimer.unref();
-
-	//         server.close();
-	//     } catch (e) {
-	//         console.log('error when exit', e.stack);
-	//     }
-	// });
 
 
 	app.use(express.static(path.join(__dirname, 'static')));
+    
 	// app.use('/download', express.static(path.join(__dirname, 'download')));
+    // 运行 rotes.js 读取 访问规则
 });
 
 // development only
@@ -67,7 +54,6 @@ if ('development' == app.get('env')) {
 }
 
 
-// 运行 rotes.js 读取 访问规则
 routes(app);
 
 server = http.createServer(app).listen(app.get('port'), function() {

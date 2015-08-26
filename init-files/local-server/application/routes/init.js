@@ -7,6 +7,7 @@ var main = require('./main'),
 module.exports = function (app) {
 	// main
 	app.get('/', main.home);
+	app.get('/map', main.map);
 		
 	// interface
 	app.get('/api/test', api.test);

@@ -295,16 +295,14 @@ var render = {
                 if(op.watch){
                     
                     var fileArr = [],
-                        isRunning = false,
                         watchTimeoutKey,
                         watchInterval = 2000,
                         watchHandle = function(){///{
                             new fn.Promise().then(function(next){
-                                clearTimeout(watchTimeoutKey);
-                                if(!fileArr.length || isRunning){
+                                // console.log('fileArr.length', fileArr.length)
+                                if(!fileArr.length){
                                     return;
                                 } else {
-                                    isRunning = true;
                                     next();
                                 }
 
@@ -319,9 +317,7 @@ var render = {
 
                             }).then(function(next){ // copy to local server
                                 if(op.create){
-                                    console.log('copy')
                                     serverPath2Path(config.projectPath, config.serverPath + 'static/', function(){
-                                        fileArr = [];
                                         next();
                                     });
                                             
@@ -332,6 +328,8 @@ var render = {
                             }).then(function(next){ // websocket
                                 if(op.live){
                                     wsServer.send('reload', 'reload it!');
+                                    fn.msg.line().success(fileArr.length + ' files copied ['+ new Date().toString().replace(/^(\w+\s\w+\s\d+\s\d+\s)(\d+\:\d+\:\d+)(.+)$/,'$2') +']');
+                                    fileArr = [];
                                     next();
 
                                 } else {
@@ -342,16 +340,16 @@ var render = {
                                 fn.timer.end();
                                 next();
                             }).then(function(next){
-                                isRunning = false;
-                                watchTimeoutKey = setTimeout(watchHandle, watchInterval);
+                                // isRunning = false;
                                 next();
 
                             }).start();
                         };///}
-
+                    
+                    watchTimeoutKey = setInterval(watchHandle, watchInterval);
                     watch(config.projectPath, function(file){
-                        fileArr.push(file);
-                        watchHandle();
+                        !/\.git/.test(file) && fileArr.push(file);
+                        
                     });
                     
                     fn.msg.notice('start to watch');
