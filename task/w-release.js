@@ -296,7 +296,7 @@ var render = {
                     
                     var fileArr = [],
                         watchTimeoutKey,
-                        watchInterval = 2000,
+                        watchInterval = 1000,
                         watchHandle = function(){///{
                             new fn.Promise().then(function(next){
                                 // console.log('fileArr.length', fileArr.length)
