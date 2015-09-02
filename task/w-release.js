@@ -260,11 +260,11 @@ var render = {
                     }).then(function(next){
                         fn.copyFiles(config.basePath + 'init-files/local-server/', config.serverPath, function() {
                             next();
-                        });
+                        }, config.filterPath);
                     }).then(function(next){
                         serverPath2Path(config.projectPath, config.serverPath + 'static/', function(){
                             next();
-                        });
+                        }, config.filterPath);
 
                     }).then(function(next){
                         fn.msg.nowrap('', true);
@@ -326,9 +326,11 @@ var render = {
                                 }
 
                             }).then(function(next){ // websocket
+                                var now = new Date().toString().replace(/^(\w+\s\w+\s\d+\s\d+\s)(\d+\:\d+\:\d+)(.+)$/,'$2');
+
                                 if(op.live){
-                                    wsServer.send('reload', 'reload it!');
-                                    fn.msg.line().success(fileArr.length + ' files copied ['+ new Date().toString().replace(/^(\w+\s\w+\s\d+\s\d+\s)(\d+\:\d+\:\d+)(.+)$/,'$2') +']');
+                                    wsServer.send('reload', 'reload it! ['+ now +']');
+                                    fn.msg.line().success(fileArr.length + ' files copied ['+ now +']');
                                     fileArr = [];
                                     next();
 
