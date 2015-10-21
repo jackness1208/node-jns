@@ -51,7 +51,7 @@ var render = {
         optimize: function(callback){///{
             
             if(typeof userConfig == 'object'){
-                console.log(userConfig)
+                // console.log(JSON.stringify(userConfig, null, 4));
 
             } else if(fs.existsSync(config.projectPath + 'Gruntfile.js') && fs.existsSync(config.projectPath + 'package.json')){
                 !function(){
@@ -179,55 +179,63 @@ var render = {
             var she = this,
                 serverDoc = config.serverPath.replace(/\/$/, ''),
                 
+                // 构建本地服务器
                 serverPath2Path = function(path, toPath, callback){
-                    // 文件拷贝
-                    fn.copyFiles(path, toPath, function(){
-                        docTreeBuild(function(){
-                            callback && callback();
+
+                    new fn.Promise().then(function(next){ // 文件拷贝
+                        fn.copyFiles(path, toPath, function(){
+                            next();
+
+                        },/node_modules$/ig, function(filename, textcontent){
+                            var r = render.init(filename, textcontent);
+                            if(wsServer.enable){
+                                r = wsServer.render(filename, r);
+                            }
+                            return r;
                         });
 
-                    },/node_modules$/ig, function(filename, textcontent){
-                        var r = render.init(filename, textcontent);
-                        if(wsServer.enable){
-                            r = wsServer.render(filename, r);
-                        }
-                        return r;
-                    });
-                },
+                    }).then(function(next){ // 主页初始化
+                        fn.getPaths(config.projectPath, function(err, list){
+                            var targetFile = config.serverPath + 'tpl/main/home.html',
+                                sourceFile = config.basePath + 'init-files/local-server/tpl/main/home.html',
+                                data = {
+                                    'treeData': fn.pathsFormat(list, '/'),
+                                    'serverAddress': config.serverAdress
+                                },
+                                iRender = function(content, data){
+                                    var iCnt = render.init(targetFile, content),
+                                        str;
 
-                // 目录搭建
-                docTreeBuild = function(callback){
-                    fn.getPaths(config.projectPath, function(err, list){
-                        var targetFile = config.serverPath + 'tpl/main/home.html',
-                            sourceFile = config.basePath + 'init-files/local-server/tpl/main/home.html',
-                            options = {
-                                'treeData': fn.pathsFormat(list, '/'),
-                                'serverAddress': config.serverAdress
-                            },
-                            myRender = function(content, op){
-                                var myContent = render.init(targetFile, content),
-                                    str;
-                                for(var key in op){
-                                    if(op.hasOwnProperty(key)){
-                                        switch(typeof op[key]){
-                                            case 'object':
-                                                str = JSON.stringify(op[key]);
-                                                break;
-
-                                            case 'string':
-                                            default:
-                                                str = op[key];
-                                                break;
-                                        }
-                                        myContent = myContent.replace(new RegExp('{{'+ key +'}}', 'g'), str);
+                                    if(op.live){
+                                        iCnt = wsServer.render(targetFile, iCnt);
                                     }
-                                }
-                                return myContent;
-                            };
-                            
-                        fs.writeFileSync(targetFile, myRender(fs.readFileSync(sourceFile), options));
+
+                                    for(var key in data){
+                                        if(data.hasOwnProperty(key)){
+                                            switch(typeof data[key]){
+                                                case 'object':
+                                                    str = JSON.stringify(data[key]);
+                                                    break;
+
+                                                case 'string':
+                                                default:
+                                                    str = data[key];
+                                                    break;
+                                            }
+                                            iCnt = iCnt.replace(new RegExp('{{'+ key +'}}', 'g'), str);
+                                        }
+                                    }
+                                    return iCnt;
+                                };
+
+                                
+                            fs.writeFileSync(targetFile, iRender(fs.readFileSync(sourceFile), data));
+                            next();
+                        });
+
+                    }).then(function(next){
                         callback && callback();
-                    });
+                    }).start();
                 };
 
             var promise = new fn.Promise();
@@ -296,13 +304,14 @@ var render = {
                     
                     var fileArr = [],
                         watchTimeoutKey,
-                        watchInterval = 1000,
+                        watchInterval = 2000,
+                        isRunning = false,
                         watchHandle = function(){///{
                             new fn.Promise().then(function(next){
-                                // console.log('fileArr.length', fileArr.length)
-                                if(!fileArr.length){
+                                if(!fileArr.length || isRunning){
                                     return;
                                 } else {
+                                    isRunning = true;
                                     next();
                                 }
 
@@ -328,29 +337,32 @@ var render = {
                             }).then(function(next){ // websocket
                                 var now = new Date().toString().replace(/^(\w+\s\w+\s\d+\s\d+\s)(\d+\:\d+\:\d+)(.+)$/,'$2');
 
-                                if(op.live){
+
+                                if(op.live && fileArr.length){
                                     wsServer.send('reload', 'reload it! ['+ now +']');
                                     fn.msg.line().success(fileArr.length + ' files copied ['+ now +']');
-                                    fileArr = [];
-                                    next();
 
-                                } else {
-                                    next();
                                 }
+
+                                next();
 
                             }).then(function(next){
                                 fn.timer.end();
                                 next();
                             }).then(function(next){
-                                // isRunning = false;
-                                next();
+                                setTimeout(function(){
+                                    fileArr = [];
+                                    isRunning = false;
+                                    next();
+                                }, 500);
 
                             }).start();
                         };///}
                     
                     watchTimeoutKey = setInterval(watchHandle, watchInterval);
                     watch(config.projectPath, function(file){
-                        !/\.git/.test(file) && fileArr.push(file);
+                        
+                        !/\.(git|svn|sass-cache)/.test(file) && !~fileArr.indexOf(file) && fileArr.push(file);
                         
                     });
                     
@@ -393,6 +405,10 @@ module.exports = function() {
         },
         runInit,
         runHelp;
+
+    if(!arguments.length){
+        runHelp = true;
+    }
 
     for(var i = 0, myArgv, len = arguments.length; i < len; i++){
         myArgv = arguments[i];

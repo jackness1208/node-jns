@@ -6,7 +6,7 @@ module.exports = {
 	// 站点端口
 	port: 5000,
 	// 站点 ico
-	favicon: __dirname.replace(/\\/g,'/') + '/../../static/images/favicon.ico',
+	favicon: __dirname.replace(/\\/g,'/') + '/../../static/common/images/favicon.ico',
 
 	// 站点主域
 	domain:'/',
@@ -49,5 +49,13 @@ module.exports = {
         }
         
         return '127.0.0.1';
-    })()
+    })(),
+
+    tool: {
+        im: {
+            websocket: {
+                port: 8001
+            }
+        }
+    }
 };

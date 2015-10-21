@@ -3,6 +3,7 @@ var express = require('express'),
 	path = require('path'),
 	ejs = require('ejs'),
 	routes = require('./application/routes/init'),
+	autorun = require('./application/autorun/init'),
 	config = require('./application/config/config'),
 	MemStore = express.session.MemoryStore,
 	domain = require('domain'),
@@ -55,6 +56,7 @@ if ('development' == app.get('env')) {
 
 
 routes(app);
+autorun(app);
 
 server = http.createServer(app).listen(app.get('port'), function() {
 	console.log('Express server listening on port ' + app.get('port'));
