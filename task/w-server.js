@@ -8,15 +8,17 @@ var inquirer = require("inquirer"),
 
 var sv = {
     start: function(){
-        fn.timer.start();
-        fn.runCMD('npm install', function(r){
-            if(r.status == 1){
-                fn.runCMD('node app', function(){
-                    fn.timer.end();
 
-                }, config.serverPath);
-            }
-        }, config.serverPath);
+        //..TODO
+        // fn.timer.start();
+        // fn.runCMD('npm install', function(r){
+        //     if(r.status == 1){
+        //         fn.runCMD('node app', function(){
+        //             fn.timer.end();
+
+        //         }, config.serverPath);
+        //     }
+        // }, config.serverPath);
     },
     open: function(){
         var cmdStr;
@@ -43,6 +45,10 @@ var sv = {
         });
         
     },
+    
+    add: function(path){
+        //..TODO
+    },
     help: function(){
         fn.help({
             usage: 'jns server',
@@ -60,17 +66,57 @@ var sv = {
 };
 
 module.exports = function(type){
+    var iArgv = Array.prototype.slice.call(arguments),
+        op = {},
+        i, len;
+
+    iArgv.shift();
+
     switch(type){
+
         case 'start':
-            sv.start();
+            for(i = 0, len = iArgv.length; i < len; i++){
+                switch(iArgv[i]){
+                    case '-l': 
+                        op.live = true; 
+                        break;
+
+                    case '-p': 
+                        op.path = iArgv[++i]; 
+                        break;
+
+                    case '-callback':
+                        op.callback = iArgv[++i];
+                        break;
+                }
+
+            }
+            sv.start(op);
             break;
 
         case 'open':
+            for(i = 0, len = iArgv.length; i < len; i++){
+                switch(iArgv[i]){
+                    case '-p': 
+                        op.path = iArgv[++i]; 
+                        break;
+
+                    case '-callback':
+                        op.callback = iArgv[++i];
+                        break;
+                }
+
+            }
+            sv.start(op);
             sv.open();
             break;
 
         case 'clear':
             sv.clear();
+            break;
+
+        case 'add':
+            sv.add();
             break;
 
         case '-h':

@@ -6,6 +6,7 @@ var inquirer = require("inquirer"),
     wsServer = require('../lib/wsServer'),
     fn = require('../lib/global'),
     config = require('../lib/config'),
+    server = require('./w-server.js'),
     userConfig = (function(){
         try{
             return require(config.userConfigFile);
@@ -241,9 +242,9 @@ var render = {
             var promise = new fn.Promise();
             
             
-            promise.then(function(next){ // websocket server start
-                op.live && wsServer.init();
-                next();
+            // promise.then(function(next){ // websocket server start
+            //     op.live && wsServer.init();
+            //     next();
 
             }).then(function(next){ // optimize
                 if(op.optimize){
@@ -256,43 +257,62 @@ var render = {
                 
                 
             }).then(function(NEXT){ // base static server build
-                if(op.create){
-                    fn.timer.start();
-                    var myPromise = new fn.Promise();
+                if(op.create || op.live){
+                    var myArgv = [];
 
-                    myPromise.then(function(next){
-                        if (!fs.existsSync(serverDoc)) {
-                            fs.mkdirSync(serverDoc);
-                        }
-                        next();
-                    }).then(function(next){
-                        fn.copyFiles(config.basePath + 'init-files/local-server/', config.serverPath, function() {
-                            next();
-                        }, config.filterPath);
-                    }).then(function(next){
-                        serverPath2Path(config.projectPath, config.serverPath + 'static/', function(){
-                            next();
-                        }, config.filterPath);
+                    if(op.live){
+                        myArgv.push('-l');
+                    }
 
-                    }).then(function(next){
-                        fn.msg.nowrap('', true);
-                        fn.runCMD('npm install', function(){
-                            next();
+                    if(op.create){
+                        myArgv.push('-p');
+                        myArgv.push(config.projectPath);
+                    }
 
-                        }, config.serverPath);
-
-                    }).then(function(next){
-                        fn.runCMD('node app', function(){
-                        }, config.serverPath);
-                        next();
-
-                    }).then(function(next){
-                        fn.timer.end();
-                        fn.msg.line().success('release ok');
-
+                    myArgv.push('callback');
+                    myArgv.push(function(){
                         NEXT();
+                    });
 
-                    }).start();
+                    server.start.apply(server,myArgv);
+
+
+                    // fn.timer.start();
+                    // var myPromise = new fn.Promise();
+
+                    // myPromise.then(function(next){
+                    //     if (!fs.existsSync(serverDoc)) {
+                    //         fs.mkdirSync(serverDoc);
+                    //     }
+                    //     next();
+                    // }).then(function(next){
+                    //     fn.copyFiles(config.basePath + 'init-files/local-server/', config.serverPath, function() {
+                    //         next();
+                    //     }, config.filterPath);
+                    // }).then(function(next){
+                    //     serverPath2Path(config.projectPath, config.serverPath + 'static/', function(){
+                    //         next();
+                    //     }, config.filterPath);
+
+                    // }).then(function(next){
+                    //     fn.msg.nowrap('', true);
+                    //     fn.runCMD('npm install', function(){
+                    //         next();
+
+                    //     }, config.serverPath);
+
+                    // }).then(function(next){
+                    //     fn.runCMD('node app', function(){
+                    //     }, config.serverPath);
+                    //     next();
+
+                    // }).then(function(next){
+                    //     fn.timer.end();
+                    //     fn.msg.line().success('release ok');
+
+                    //     NEXT();
+
+                    // }).start();
                     
 
                 } else {
@@ -326,9 +346,12 @@ var render = {
 
                             }).then(function(next){ // copy to local server
                                 if(op.create){
-                                    serverPath2Path(config.projectPath, config.serverPath + 'static/', function(){
+                                    server.add('-p', config.projectPath, '-callback', function(){
                                         next();
                                     });
+                                    // serverPath2Path(config.projectPath, config.serverPath + 'static/', function(){
+                                    //     next();
+                                    // });
                                             
                                 } else {
                                     next();
