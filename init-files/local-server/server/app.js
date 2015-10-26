@@ -1,7 +1,8 @@
 var express = require('express'),
 	http = require('http'),
 	path = require('path'),
-	ejs = require('ejs'),
+	// ejs = require('ejs'),
+	swig = require('swig'),
 	routes = require('./application/routes/init'),
 	autorun = require('./application/autorun/init'),
 	config = require('./application/config/config'),
@@ -12,10 +13,13 @@ var express = require('express'),
 
 app.configure(function() {
 	app.set('port', process.env.PORT || config.port);
+	app.set('views', path.join(__dirname, 'server/components'));
 
-	app.set('views', path.join(__dirname, 'tpl'));
-	app.set('view engine', 'html');
-	app.engine('.html', ejs.__express);
+    app.engine('tpl', swig.renderFile);
+    app.set('view engine', 'tpl');
+	
+    // app.engine('.tpl', ejs.__express);
+	// app.set('view engine', 'tpl');
 
 	// icon
 	app.use(express.favicon( config.favicon));
@@ -55,8 +59,7 @@ if ('development' == app.get('env')) {
 }
 
 
-routes(app);
-autorun(app);
+// routes(app);
 
 server = http.createServer(app).listen(app.get('port'), function() {
 	console.log('Express server listening on port ' + app.get('port'));

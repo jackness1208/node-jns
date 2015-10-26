@@ -3,7 +3,6 @@ var inquirer = require("inquirer"),
     watch = require('node-watch'),
     fs = require('fs'),
     color = require('../lib/colors'),
-    wsServer = require('../lib/wsServer'),
     fn = require('../lib/global'),
     config = require('../lib/config'),
     server = require('./w-server.js'),
@@ -16,24 +15,25 @@ var inquirer = require("inquirer"),
     })();
 
 
-var render = {
-        init: function(filename, content){
-            var she = this,
-                myExt = filename.split('.').pop();
+var 
+    // render = {
+    //     init: function(filename, content){
+    //         var she = this,
+    //             myExt = filename.split('.').pop();
 
-            switch(myExt){
-                case 'html':
-                    return render.html(content);
+    //         switch(myExt){
+    //             case 'html':
+    //                 return render.html(content);
 
-                default:
-                    return content;
-            }
-        },
-        html: function(content){
-            return content + '';
-        }
+    //             default:
+    //                 return content;
+    //         }
+    //     },
+    //     html: function(content){
+    //         return content + '';
+    //     }
 
-    },
+    // },
     
     release = {
         configFile: {
@@ -178,75 +178,69 @@ var render = {
         init: function(op){///{
             op = op || {};
             var she = this,
-                serverDoc = config.serverPath.replace(/\/$/, ''),
+                serverDoc = config.serverPath.replace(/\/$/, '');
                 
                 // 构建本地服务器
-                serverPath2Path = function(path, toPath, callback){
+                // serverPath2Path = function(path, toPath, callback){
 
-                    new fn.Promise().then(function(next){ // 文件拷贝
-                        fn.copyFiles(path, toPath, function(){
-                            next();
+                //     new fn.Promise().then(function(next){ // 文件拷贝
+                //         fn.copyFiles(path, toPath, function(){
+                //             next();
 
-                        },/node_modules$/ig, function(filename, textcontent){
-                            var r = render.init(filename, textcontent);
-                            if(wsServer.enable){
-                                r = wsServer.render(filename, r);
-                            }
-                            return r;
-                        });
+                //         },/node_modules$/ig, function(filename, textcontent){
+                //             var r = render.init(filename, textcontent);
+                //             if(wsServer.enable){
+                //                 r = wsServer.render(filename, r);
+                //             }
+                //             return r;
+                //         });
 
-                    }).then(function(next){ // 主页初始化
-                        fn.getPaths(config.projectPath, function(err, list){
-                            var targetFile = config.serverPath + 'tpl/main/home.html',
-                                sourceFile = config.basePath + 'init-files/local-server/tpl/main/home.html',
-                                data = {
-                                    'treeData': fn.pathsFormat(list, '/'),
-                                    'serverAddress': config.serverAdress
-                                },
-                                iRender = function(content, data){
-                                    var iCnt = render.init(targetFile, content),
-                                        str;
+                //     }).then(function(next){ // 主页初始化
+                //         fn.getPaths(config.projectPath, function(err, list){
+                //             var targetFile = config.serverPath + 'tpl/main/home.html',
+                //                 sourceFile = config.basePath + 'init-files/local-server/tpl/main/home.html',
+                //                 data = {
+                //                     'treeData': fn.pathsFormat(list, '/'),
+                //                     'serverAddress': config.serverAdress
+                //                 },
+                //                 iRender = function(content, data){
+                //                     var iCnt = render.init(targetFile, content),
+                //                         str;
 
-                                    if(op.live){
-                                        iCnt = wsServer.render(targetFile, iCnt);
-                                    }
+                //                     if(op.live){
+                //                         iCnt = wsServer.render(targetFile, iCnt);
+                //                     }
 
-                                    for(var key in data){
-                                        if(data.hasOwnProperty(key)){
-                                            switch(typeof data[key]){
-                                                case 'object':
-                                                    str = JSON.stringify(data[key]);
-                                                    break;
+                //                     for(var key in data){
+                //                         if(data.hasOwnProperty(key)){
+                //                             switch(typeof data[key]){
+                //                                 case 'object':
+                //                                     str = JSON.stringify(data[key]);
+                //                                     break;
 
-                                                case 'string':
-                                                default:
-                                                    str = data[key];
-                                                    break;
-                                            }
-                                            iCnt = iCnt.replace(new RegExp('{{'+ key +'}}', 'g'), str);
-                                        }
-                                    }
-                                    return iCnt;
-                                };
+                //                                 case 'string':
+                //                                 default:
+                //                                     str = data[key];
+                //                                     break;
+                //                             }
+                //                             iCnt = iCnt.replace(new RegExp('{{'+ key +'}}', 'g'), str);
+                //                         }
+                //                     }
+                //                     return iCnt;
+                //                 };
 
                                 
-                            fs.writeFileSync(targetFile, iRender(fs.readFileSync(sourceFile), data));
-                            next();
-                        });
+                //             fs.writeFileSync(targetFile, iRender(fs.readFileSync(sourceFile), data));
+                //             next();
+                //         });
 
-                    }).then(function(next){
-                        callback && callback();
-                    }).start();
-                };
+                //     }).then(function(next){
+                //         callback && callback();
+                //     }).start();
+                // };
 
-            var promise = new fn.Promise();
-            
-            
-            // promise.then(function(next){ // websocket server start
-            //     op.live && wsServer.init();
-            //     next();
 
-            }).then(function(next){ // optimize
+            new fn.Promise(function(next){ // optimize
                 if(op.optimize){
                     release.optimize(function(){
                         next();
@@ -258,7 +252,7 @@ var render = {
                 
             }).then(function(NEXT){ // base static server build
                 if(op.create || op.live){
-                    var myArgv = [];
+                    var myArgv = ['start'];
 
                     if(op.live){
                         myArgv.push('-l');
@@ -274,7 +268,7 @@ var render = {
                         NEXT();
                     });
 
-                    server.start.apply(server,myArgv);
+                    server.apply(server,myArgv);
 
 
                     // fn.timer.start();
@@ -347,8 +341,11 @@ var render = {
                             }).then(function(next){ // copy to local server
                                 if(op.create){
                                     server.add('-p', config.projectPath, '-callback', function(){
+                                        fn.msg.line().success(fileArr.length + ' files copied ['+ now +']');
                                         next();
+
                                     });
+
                                     // serverPath2Path(config.projectPath, config.serverPath + 'static/', function(){
                                     //     next();
                                     // });
@@ -357,21 +354,22 @@ var render = {
                                     next();
                                 }
 
-                            }).then(function(next){ // websocket
-                                var now = new Date().toString().replace(/^(\w+\s\w+\s\d+\s\d+\s)(\d+\:\d+\:\d+)(.+)$/,'$2');
+                            // }).then(function(next){ // websocket
+                            //     var now = new Date().toString().replace(/^(\w+\s\w+\s\d+\s\d+\s)(\d+\:\d+\:\d+)(.+)$/,'$2');
 
 
-                                if(op.live && fileArr.length){
-                                    wsServer.send('reload', 'reload it! ['+ now +']');
-                                    fn.msg.line().success(fileArr.length + ' files copied ['+ now +']');
+                            //     if(op.live && fileArr.length){
+                            //         // wsServer.send('reload', 'reload it! ['+ now +']');
+                            //         fn.msg.line().success(fileArr.length + ' files copied ['+ now +']');
 
-                                }
+                            //     }
 
-                                next();
+                            //     next();
 
                             }).then(function(next){
                                 fn.timer.end();
                                 next();
+
                             }).then(function(next){
                                 setTimeout(function(){
                                     fileArr = [];
@@ -384,8 +382,7 @@ var render = {
                     
                     watchTimeoutKey = setInterval(watchHandle, watchInterval);
                     watch(config.projectPath, function(file){
-                        
-                        !/\.(git|svn|sass-cache)/.test(file) && !~fileArr.indexOf(file) && fileArr.push(file);
+                        !file.match(config.filterPath) && !~fileArr.indexOf(file) && fileArr.push(file);
                         
                     });
                     

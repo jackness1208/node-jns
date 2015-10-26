@@ -1,5 +1,6 @@
 var inquirer = require("inquirer"),
     readline = require('readline'),
+    wsServer = require('../lib/wsServer'),
     fs = require('fs'),
     color = require('../lib/colors'),
     fn = require('../lib/global'),
@@ -7,18 +8,72 @@ var inquirer = require("inquirer"),
 
 
 var sv = {
-    start: function(){
+    start: function(op){
+        op = op || {};
 
-        //..TODO
-        // fn.timer.start();
-        // fn.runCMD('npm install', function(r){
-        //     if(r.status == 1){
-        //         fn.runCMD('node app', function(){
-        //             fn.timer.end();
+        fn.timer.start(); // 开始计时
+        new fn.Promise(function(next){ // live
+            if(op.live){
+                op.live && wsServer.init();
+            }
+            next();
 
-        //         }, config.serverPath);
-        //     }
-        // }, config.serverPath);
+        }).then(function(NEXT){ // 本地服务器搭建
+            var serverDoc = config.serverPath.replace(/\/$/, ''),
+                serverSource = config.basePath + 'init-files/local-server/';
+
+
+                new fn.Promise(function(next){ // 判断目录是否存在
+                    if (!fs.existsSync(serverDoc)) {
+                        fs.mkdirSync(serverDoc);
+                    }
+                    next();
+
+                }).then(function(next){ // 拷贝 服务器文件
+                    fn.copyFiles(serverSource, config.serverPath, function() {
+                        next();
+                    }, config.filterPath);
+
+                }).then(function(next){
+                    if(op.path){ // 将 path 路径里面的内容拷贝到 服务器的 static 文件夹里面
+                        sv.add({
+                            'path': config.projectPath, 
+                            'callback': function(){
+                                next();
+
+                            }
+                        });
+                        
+                    } else {
+                        next();
+                    }
+                }).then(function(next){
+                    NEXT();
+
+                }).start();
+
+        }).then(function(next){ // server 初始化
+            fn.msg.nowrap('', true);
+            fn.runCMD('npm install', function(){
+                next();
+
+            }, config.serverPath);
+        }).then(function(next){ // 运行服务器
+            var iPackage = require(config.serverPath + 'package.json'),
+                startBranch = iPackage.start || 'app';
+
+            fn.runCMD('node ' + startBranch, function(){
+                next();
+
+            }, config.serverPath);
+
+        }).then(function(){ // 完成
+            fn.timer.end();
+            fn.msg.line().success('release ok');
+            op.callback && op.callback();
+
+        }).start();
+
     },
     open: function(){
         var cmdStr;
@@ -46,7 +101,29 @@ var sv = {
         
     },
     
-    add: function(path){
+    add: function(op){
+        op = op || {};
+
+        if(op.path){
+            fn.copyFiles(op.path, config.serverPath + 'static/', function(){
+                var now = new Date().toString().replace(/^(\w+\s\w+\s\d+\s\d+\s)(\d+\:\d+\:\d+)(.+)$/,'$2');
+
+                if(op.live && fileArr.length && wsServer.enable){
+                    wsServer.send('reload', 'reload it! ['+ now +']');
+                }
+
+                op.callback && op.callback();
+
+            },/node_modules$/ig, function(filename, textcontent){
+                if(wsServer.enable){
+                    return wsServer.render(filename, textcontent);
+                } else {
+                    return textcontent;
+                }
+
+            });
+
+        }
         //..TODO
     },
     help: function(){
@@ -95,6 +172,14 @@ module.exports = function(type){
             break;
 
         case 'open':
+            sv.open();
+            break;
+
+        case 'clear':
+            sv.clear();
+            break;
+
+        case 'add':
             for(i = 0, len = iArgv.length; i < len; i++){
                 switch(iArgv[i]){
                     case '-p': 
@@ -107,16 +192,7 @@ module.exports = function(type){
                 }
 
             }
-            sv.start(op);
-            sv.open();
-            break;
-
-        case 'clear':
-            sv.clear();
-            break;
-
-        case 'add':
-            sv.add();
+            sv.add(op);
             break;
 
         case '-h':

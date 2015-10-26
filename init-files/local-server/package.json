@@ -2,6 +2,7 @@
   "name": "jnsLocalServer",
   "version": "1.0.0",
   "description": "jns local server",
+  "start": "server/app.js",
   "keywords": [
     "jns"
   ],
@@ -12,5 +13,8 @@
     "socket.io": "^1.3.5",
     "express": "3.4.8",
     "ejs": "*"
+  },
+  "devDependencies": {
+    "swig": "^1.4.2"
   }
 }

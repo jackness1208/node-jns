@@ -136,5 +136,6 @@ module.exports = {
 	 */
 	isArray: function(obj){
 		return /Array/.test(Object.prototype.toString.call(obj));
-	}
+	},
+
 };
