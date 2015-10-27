@@ -1,13 +1,12 @@
 var express = require('express'),
 	http = require('http'),
 	path = require('path'),
-	// ejs = require('ejs'),
-	swig = require('swig'),
-	routes = require('./application/routes/init'),
-	autorun = require('./application/autorun/init'),
-	config = require('./application/config/config'),
-	MemStore = express.session.MemoryStore,
 	domain = require('domain'),
+	swig = require('swig'),
+	MemStore = express.session.MemoryStore,
+	// ejs = require('ejs'),
+	fn = require('./libs/global.js'),
+	config = require('./config.js'),
 	app = express(),
 	server;
 
@@ -58,10 +57,53 @@ if ('development' == app.get('env')) {
 	app.use(express.errorHandler());
 }
 
+// 路由、自启动执行
+new fn.Promise(function(next){ // 获取 components 里面所有文件
+    fn.getPaths('./components', function(files){
+        next(files);
+    });
 
-// routes(app);
+}).then(function(files, next){ // 筛选出 autorun.js router.js
+    var 
+        AUTORUN_REG = /[\/\\]?autorun\.js$/,
+        ROUTER_REG = /[\/\\]?router\.js$/,
+        autoruns = [],
+        routers = [];
 
-server = http.createServer(app).listen(app.get('port'), function() {
-	console.log('Express server listening on port ' + app.get('port'));
-});
+    console.log(files);
 
+    files.forEach(function(file){
+        if(AUTORUN_REG.match(file)){
+            autoruns.push(file);
+
+        } else if(ROUTER_REG.match(file)){
+            routers.push(file);
+        }
+
+    });
+    next(autoruns, routers);
+
+}).then(function(autoruns, routers, next){// 分别执行
+        
+    routers.forEach(function(item){
+        var iRouter = require(item);
+        iRouter(app);
+    });
+
+    var padding = autorunArr.length;
+
+    autoruns.forEach(function(item){
+        var iAutoRun = require(item);
+        iAutoRun(app, function(){
+            if(!--padding){
+                next();
+            }
+        });
+    });
+
+}).then(function(){ // 启动服务
+    server = http.createServer(app).listen(app.get('port'), function() {
+        console.log('Express server listening on port ' + app.get('port'));
+    });
+
+}).start();

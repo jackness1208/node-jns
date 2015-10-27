@@ -179,67 +179,7 @@ var
             op = op || {};
             var she = this,
                 serverDoc = config.serverPath.replace(/\/$/, '');
-                
-                // 构建本地服务器
-                // serverPath2Path = function(path, toPath, callback){
-
-                //     new fn.Promise().then(function(next){ // 文件拷贝
-                //         fn.copyFiles(path, toPath, function(){
-                //             next();
-
-                //         },/node_modules$/ig, function(filename, textcontent){
-                //             var r = render.init(filename, textcontent);
-                //             if(wsServer.enable){
-                //                 r = wsServer.render(filename, r);
-                //             }
-                //             return r;
-                //         });
-
-                //     }).then(function(next){ // 主页初始化
-                //         fn.getPaths(config.projectPath, function(err, list){
-                //             var targetFile = config.serverPath + 'tpl/main/home.html',
-                //                 sourceFile = config.basePath + 'init-files/local-server/tpl/main/home.html',
-                //                 data = {
-                //                     'treeData': fn.pathsFormat(list, '/'),
-                //                     'serverAddress': config.serverAdress
-                //                 },
-                //                 iRender = function(content, data){
-                //                     var iCnt = render.init(targetFile, content),
-                //                         str;
-
-                //                     if(op.live){
-                //                         iCnt = wsServer.render(targetFile, iCnt);
-                //                     }
-
-                //                     for(var key in data){
-                //                         if(data.hasOwnProperty(key)){
-                //                             switch(typeof data[key]){
-                //                                 case 'object':
-                //                                     str = JSON.stringify(data[key]);
-                //                                     break;
-
-                //                                 case 'string':
-                //                                 default:
-                //                                     str = data[key];
-                //                                     break;
-                //                             }
-                //                             iCnt = iCnt.replace(new RegExp('{{'+ key +'}}', 'g'), str);
-                //                         }
-                //                     }
-                //                     return iCnt;
-                //                 };
-
-                                
-                //             fs.writeFileSync(targetFile, iRender(fs.readFileSync(sourceFile), data));
-                //             next();
-                //         });
-
-                //     }).then(function(next){
-                //         callback && callback();
-                //     }).start();
-                // };
-
-
+               
             new fn.Promise(function(next){ // optimize
                 if(op.optimize){
                     release.optimize(function(){

@@ -29,10 +29,19 @@ var sv = {
                     }
                     next();
 
+                }).then(function(next){// 拷贝 lib/color.js、lib/global.js 到 服务器 server/lib
+                    var files = {};
+                    files[config.basePath + 'lib/colors.js'] = serverSource + 'server/libs/colors.js';
+                    files[config.basePath + 'lib/global.js'] = serverSource + 'server/libs/global.js';
+                    fn.copyFiles(files, function(){
+                        next();
+                    });
+
                 }).then(function(next){ // 拷贝 服务器文件
                     fn.copyFiles(serverSource, config.serverPath, function() {
                         next();
                     }, config.filterPath);
+
 
                 }).then(function(next){
                     if(op.path){ // 将 path 路径里面的内容拷贝到 服务器的 static 文件夹里面
