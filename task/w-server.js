@@ -69,12 +69,14 @@ var sv = {
             }, config.serverPath);
         }).then(function(next){ // 运行服务器
             var iPackage = require(config.serverPath + 'package.json'),
-                startBranch = iPackage.start || 'app';
+                startBranch = iPackage.start || 'app',
+                startPath = (config.serverPath + startBranch).replace(/[^\\\/]+$/,''),
+                startName = (config.serverPath + startBranch).split('/').pop(); 
 
-            fn.runCMD('node ' + startBranch, function(){
-                next();
+            fn.runCMD('node ' + startName, function(){
+            }, startPath);
 
-            }, config.serverPath);
+            next();
 
         }).then(function(){ // 完成
             fn.timer.end();

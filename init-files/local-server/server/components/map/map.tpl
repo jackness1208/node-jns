@@ -82,17 +82,8 @@ a{ text-decoration: none; color:#333; }
 
 </div>
 
-<div class="main-mod" >
-    <div class="main-mod-tl">mini IM</div>
-    <div class="main-mod-cnt server-trans">
-        <div class="server-output" id="serverOutput"></div>
-        <textarea class="server-trans-txt" id="serverTxt"></textarea>
-        <input class="server-trans-btn" type="button" id="serverBtn" value="send" />
-    </div>
-</div>
-
 <script type="text/javascript" charset="utf-8">
-var treeData = {{treeData}};
+var treeData = {{ JSON.stringify(treeData, null, 4) }};
 
 !function(global, undefined){
     var treeList = document.getElementById('treeList'),

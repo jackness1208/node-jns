@@ -7,12 +7,13 @@ var express = require('express'),
 	// ejs = require('ejs'),
 	fn = require('./libs/global.js'),
 	config = require('./config.js'),
+    serverPath = path.join(__dirname, '../'),
 	app = express(),
 	server;
 
 app.configure(function() {
 	app.set('port', process.env.PORT || config.port);
-	app.set('views', path.join(__dirname, 'server/components'));
+	app.set('views', path.join(serverPath, 'server/components'));
 
     app.engine('tpl', swig.renderFile);
     app.set('view engine', 'tpl');
@@ -38,17 +39,16 @@ app.configure(function() {
 		})
 	}));
 
-	
-
 
     process.on('uncaughtException', function (err) {
-	    console.log(err);
-	});	
+        console.error('Uncaught exception:\n', err.stack);
+    });
 
 
-	app.use(express.static(path.join(__dirname, 'static')));
+	app.use(express.static(path.join(serverPath, 'static')));
+	app.use('/components', express.static(path.join(serverPath, 'views/components')));
     
-	// app.use('/download', express.static(path.join(__dirname, 'download')));
+	// app.use('/download', express.static(path.join(serverPath, 'download')));
     // 运行 rotes.js 读取 访问规则
 });
 
@@ -59,8 +59,19 @@ if ('development' == app.get('env')) {
 
 // 路由、自启动执行
 new fn.Promise(function(next){ // 获取 components 里面所有文件
-    fn.getPaths('./components', function(files){
-        next(files);
+    var iPath = './components';
+    fn.getPaths(iPath, function(err, files){
+        var r = [];
+        if(err){
+            console.log(err);
+            return;
+        }
+
+        files.forEach(function(file){
+            r.push(iPath + file);
+        });
+
+        next(r);
     });
 
 }).then(function(files, next){ // 筛选出 autorun.js router.js
@@ -70,13 +81,11 @@ new fn.Promise(function(next){ // 获取 components 里面所有文件
         autoruns = [],
         routers = [];
 
-    console.log(files);
-
     files.forEach(function(file){
-        if(AUTORUN_REG.match(file)){
+        if(file.match(AUTORUN_REG)){
             autoruns.push(file);
 
-        } else if(ROUTER_REG.match(file)){
+        } else if(file.match(ROUTER_REG)){
             routers.push(file);
         }
 
@@ -90,7 +99,7 @@ new fn.Promise(function(next){ // 获取 components 里面所有文件
         iRouter(app);
     });
 
-    var padding = autorunArr.length;
+    var padding = autoruns.length;
 
     autoruns.forEach(function(item){
         var iAutoRun = require(item);
@@ -101,9 +110,43 @@ new fn.Promise(function(next){ // 获取 components 里面所有文件
         });
     });
 
+}).then(function(next){// 设置主页、 404
+
+    // main
+	app.get('/', function(req, res){
+        if(req.host != config.serverAdress && config.serverAddress != '127.0.0.1'){
+            res.redirect('http://' + config.serverAdress + ':'+ config.port +'/');
+            return;
+        }
+		// 地址重定向
+        res.redirect('/map');
+    });
+
+    // 404
+    app.use(function(req, res, next){
+        res.status(404);
+
+        // respond with html page
+        if (req.accepts('html')) {
+        res.status(404).render('common/404', { url: req.url });
+        return;
+        }
+
+        // respond with json
+        if (req.accepts('json')) {
+        res.send({ error: 'Not found' });
+        return;
+        }
+
+        // default to plain-text. send()
+        res.type('txt').send('Not found');
+    });
+
+    next();
+
 }).then(function(){ // 启动服务
     server = http.createServer(app).listen(app.get('port'), function() {
-        console.log('Express server listening on port ' + app.get('port'));
+        fn.msg.success('Express server listening on port ' + app.get('port'));
     });
 
 }).start();

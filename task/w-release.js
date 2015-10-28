@@ -16,24 +16,6 @@ var inquirer = require("inquirer"),
 
 
 var 
-    // render = {
-    //     init: function(filename, content){
-    //         var she = this,
-    //             myExt = filename.split('.').pop();
-
-    //         switch(myExt){
-    //             case 'html':
-    //                 return render.html(content);
-
-    //             default:
-    //                 return content;
-    //         }
-    //     },
-    //     html: function(content){
-    //         return content + '';
-    //     }
-
-    // },
     
     release = {
         configFile: {
@@ -52,7 +34,6 @@ var
         optimize: function(callback){///{
             
             if(typeof userConfig == 'object'){
-                // console.log(JSON.stringify(userConfig, null, 4));
 
             } else if(fs.existsSync(config.projectPath + 'Gruntfile.js') && fs.existsSync(config.projectPath + 'package.json')){
                 !function(){
@@ -203,51 +184,12 @@ var
                         myArgv.push(config.projectPath);
                     }
 
-                    myArgv.push('callback');
+                    myArgv.push('-callback');
                     myArgv.push(function(){
                         NEXT();
                     });
 
                     server.apply(server,myArgv);
-
-
-                    // fn.timer.start();
-                    // var myPromise = new fn.Promise();
-
-                    // myPromise.then(function(next){
-                    //     if (!fs.existsSync(serverDoc)) {
-                    //         fs.mkdirSync(serverDoc);
-                    //     }
-                    //     next();
-                    // }).then(function(next){
-                    //     fn.copyFiles(config.basePath + 'init-files/local-server/', config.serverPath, function() {
-                    //         next();
-                    //     }, config.filterPath);
-                    // }).then(function(next){
-                    //     serverPath2Path(config.projectPath, config.serverPath + 'static/', function(){
-                    //         next();
-                    //     }, config.filterPath);
-
-                    // }).then(function(next){
-                    //     fn.msg.nowrap('', true);
-                    //     fn.runCMD('npm install', function(){
-                    //         next();
-
-                    //     }, config.serverPath);
-
-                    // }).then(function(next){
-                    //     fn.runCMD('node app', function(){
-                    //     }, config.serverPath);
-                    //     next();
-
-                    // }).then(function(next){
-                    //     fn.timer.end();
-                    //     fn.msg.line().success('release ok');
-
-                    //     NEXT();
-
-                    // }).start();
-                    
 
                 } else {
                     NEXT();
@@ -280,31 +222,15 @@ var
 
                             }).then(function(next){ // copy to local server
                                 if(op.create){
-                                    server.add('-p', config.projectPath, '-callback', function(){
-                                        fn.msg.line().success(fileArr.length + ' files copied ['+ now +']');
+                                    server('add','-p', config.projectPath, '-callback', function(){
+                                        fn.msg.line().success(fileArr.length + ' files copied ['+ fn.timer.getNow() +']');
                                         next();
 
                                     });
 
-                                    // serverPath2Path(config.projectPath, config.serverPath + 'static/', function(){
-                                    //     next();
-                                    // });
-                                            
                                 } else {
                                     next();
                                 }
-
-                            // }).then(function(next){ // websocket
-                            //     var now = new Date().toString().replace(/^(\w+\s\w+\s\d+\s\d+\s)(\d+\:\d+\:\d+)(.+)$/,'$2');
-
-
-                            //     if(op.live && fileArr.length){
-                            //         // wsServer.send('reload', 'reload it! ['+ now +']');
-                            //         fn.msg.line().success(fileArr.length + ' files copied ['+ now +']');
-
-                            //     }
-
-                            //     next();
 
                             }).then(function(next){
                                 fn.timer.end();

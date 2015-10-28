@@ -1,9 +1,9 @@
 var 
-    global = require('../libs/global'),
-	config = require('../config/config');
+    fn = require('../../libs/global.js'),
+	config = require('../../config.js');
 
 
-module.exports = function (app) {
+module.exports = function (app, done) {
     var iPort = config.tool.im.websocket.port;
 
     // miniIM init
@@ -51,12 +51,11 @@ module.exports = function (app) {
                 });
             });
 
-            console.info('-----------------------------');
-            console.info('miniIM websocket server start');
-            console.info('http://'+ config.serverAdress +':'+ iPort);
-            console.info('-----------------------------');
+            fn.msg.notice('miniIM websocket server start');
+            fn.msg.notice('http://'+ config.serverAdress +':'+ iPort);
 
             she.enable = true;
+            done();
         },
         send: function(event, txt){
             var she = this;

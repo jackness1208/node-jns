@@ -81,6 +81,11 @@ var fn = {
                     fn.msg.nowrap(color.green(' ' + (new Date() - she.now) + 'ms\n'));
                 }
                 she.now = undefined;
+            },
+
+            // 当前时间
+            getNow: function(){
+                return new Date().toString().replace(/^(\w+\s\w+\s\d+\s\d+\s)(\d+\:\d+\:\d+)(.+)$/,'$2');
             }
         },///}
         /**
@@ -161,7 +166,7 @@ var fn = {
              * @return {Void}
              */
             error: function(txt){
-                console.log(color.red('[error] ') + txt);
+                console.log(color.red('[error] ' + txt));
             },
             /**
              * 成功输出
@@ -169,7 +174,7 @@ var fn = {
              * @return {Void}
              */
             success: function(txt){
-                console.log(color.blue('[success] ') + txt);
+                console.log(color.cyan('[success] ' + txt));
             },
             /**
              * 一般输出
@@ -177,21 +182,21 @@ var fn = {
              * @return {Void}
              */
             notice: function(txt){
-                console.log(color.yellow('[notice] ') + txt);
+                console.log(color.yellow('[notice] ' + txt));
             },
             /**
              * 创造输出
              * @param {String} txt 文本内容
              */
             create: function(txt){
-                console.log(color.green('[create] ') + txt);
+                console.log(color.green('[create] ' + txt));
             },
             /**
              * 输出分割线
              * @return {Object} msg
              */
             line: function(){
-                console.log('----------------------');
+                console.log(color.gray('----------------------'));
                 return this;
             },
             /**
@@ -775,6 +780,7 @@ var fn = {
                     }
                     fs.readdir(dir, function(err, list){
                         if(err){
+                            console.log('err', err)
                             return done(err);
                         }
 
@@ -814,7 +820,7 @@ var fn = {
                 };
             
             readFiles(location, function(error, files){
-                files.sort(function(elm1,elm2){
+                files && files.sort(function(elm1,elm2){
                     return String(elm1).localeCompare(String(elm2));
                 });
                 callback(error, files);
@@ -907,6 +913,9 @@ var fn = {
                     she.queue.shift().apply(she, myArgv);
                 }
             };
+            if(fn){
+                she.then(fn);
+            }
 
             
         },
@@ -1032,5 +1041,6 @@ var fn = {
     
 
 module.exports = fn;
+
 
 

@@ -1,12 +1,13 @@
-var os = require('os');
+var os = require('os'),
+    path = require('path');
 
 module.exports = {
 	// 站点目录
-	sitePath: __dirname.replace(/\\/g,'/') + '/../../',
+	sitePath: path.join(__dirname, '../'),
 	// 站点端口
 	port: 5000,
 	// 站点 ico
-	favicon: __dirname.replace(/\\/g,'/') + '/../../static/common/images/favicon.ico',
+	favicon: path.join(__dirname, '../views/components/common/images/favicon.ico'),
 
 	// 站点主域
 	domain:'/',
