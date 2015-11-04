@@ -221,7 +221,8 @@ var
                                 }
 
                             }).then(function(next){ // copy to local server
-                                if(op.create){
+                                if(op.create && op.live && fileArr.length){
+
                                     server('add','-p', config.projectPath, '-callback', function(){
                                         fn.msg.line().success(fileArr.length + ' files copied ['+ fn.timer.getNow() +']');
                                         next();
@@ -266,7 +267,10 @@ var
                 usage: 'jns release',
                 commands: {
                     'init': 'create the config file',
-                    '-l': 'web socket server start',
+                    '-l': [
+                            'web socket server start', 
+                            'or just start the local server'
+                    ],
                     '-o': 'optimize project',
                     '-w': 'watch project',
                     '-d': 'output the project',

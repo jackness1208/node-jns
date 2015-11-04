@@ -121,14 +121,26 @@ var fn = {
                 },
                 compose = function(key, arr){
                     var r = [],
-                        maxkeyLen = accountMaxKeyLen(arr);
+                        maxkeyLen = accountMaxKeyLen(arr),
+                        i, len;
                     
                     r.push('');
-                    r.push(textIndent(key + ':', baseIndent));
+                    r.push(color.yellow(textIndent(key + ':', baseIndent)));
                     
                     for(var key in arr){
                         if(arr.hasOwnProperty(key)){
-                            r.push(textIndent(key, baseIndent * 2) + textIndent(arr[key], maxkeyLen - key.length + 2));
+                            if(fn.type(arr[key]) == 'array'){
+                                r.push( color.gray(textIndent(key, baseIndent * 2)) + textIndent(arr[key].shift(), maxkeyLen - key.length + 2));
+                                for(i = 0, len = arr[key].length; i < len; i++){
+                                    r.push(textIndent(arr[key][i], maxkeyLen + 2 + baseIndent * 2));
+                                }
+
+
+
+                            } else {
+                                r.push(color.gray(textIndent(key, baseIndent * 2)) + textIndent(arr[key], maxkeyLen - key.length + 2));
+
+                            }
                         }
                     }
                     
@@ -139,7 +151,7 @@ var fn = {
                 r = [];
                 
             op.usage && r.push(
-                textIndent('Usage: '+ (op.usage || '') +' <command>', baseIndent)
+                textIndent(color.yellow('Usage: ')+ (op.usage || '') +' <command>', baseIndent)
             );
             
             if(op.commands){

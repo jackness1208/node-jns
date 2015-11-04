@@ -119,7 +119,7 @@ var sv = {
             fn.copyFiles(op.path, config.serverPath + 'static/', function(){
                 var now = new Date().toString().replace(/^(\w+\s\w+\s\d+\s\d+\s)(\d+\:\d+\:\d+)(.+)$/,'$2');
 
-                if(op.live && fileArr.length && wsServer.enable){
+                if(wsServer.enable){
                     wsServer.send('reload', 'reload it! ['+ now +']');
                 }
 
@@ -135,7 +135,6 @@ var sv = {
             });
 
         }
-        //..TODO
     },
     help: function(){
         fn.help({

@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0">
 <title>mini IM</title>
-<script src="http://<%= config.serverAdress%>:<%= config.tool.im.websocket.port%>/socket.io/socket.io.js"></script>
+<script src="http://{{config.serverAdress}}:{{config.tool.im.websocket.port}}/socket.io/socket.io.js"></script>
 <script>
 !function(){
     var docEl = document.documentElement,
@@ -44,7 +44,7 @@
     
 }();
 </script>
-<link rel="stylesheet" href="<%= config.domain %>tool/css/im/im.css" type="text/css" charset="utf-8">
+<link rel="stylesheet" href="{{config.domain}}components/im/im.css" type="text/css" charset="utf-8">
 </head>
 <body>
     <div class="im-area">
@@ -78,7 +78,7 @@
 
     </div>
 
-<script type="text-javascript" src="<%= config.domain %>tool/js/im.js"></script>
+<script type="text-javascript" src="{{config.domain}}components/im/im.js"></script>
 </body>
 
 </html>
