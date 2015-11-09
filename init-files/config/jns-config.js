@@ -69,7 +69,41 @@ module.exports = {
         //         }
         //     }
         // },
+        //
+        // jade: {
+        //     'test': {
+        //         options: {
+        //             data: function(dest, src){
+
+        //             }
+        //         },
+        //         files: {
+        //             'html/index.html': ['tpl/index.jade']
+        //         }
+        //     }
+        // },
+        // prettify: {
+        //     'test': {
+        //         options: {
+        //             "indent": 4,
+        //             "condense": true,
+        //             "indent_inner_html": true,
+        //             "unformatted": [
+        //                 "a",
+        //                 "pre"
+        //             ]
+        //         },
+        //         files: {
+        //             'html/index.html': ['html/index.html']
+        //         }
+        //     }
+        // }
     },
 
-};
+    devDependencies: [
+        // 'grunt-contrib-jade',
+        // 'grunt-prettify',
+        // 'grunt-contrib-requirejs',
+        // 'grunt-contrib-sass'
+    ];
 
