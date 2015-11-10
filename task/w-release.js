@@ -200,7 +200,7 @@ var
                     
                     var fileArr = [],
                         watchTimeoutKey,
-                        watchInterval = 2000,
+                        watchInterval = 1000,
                         isRunning = false,
                         watchHandle = function(){///{
                             new fn.Promise().then(function(next){

@@ -37,8 +37,15 @@ var sv = {
                         next();
                     });
 
+                }).then(function(next){ // 清空文件夹内容
+                    fn.removeFiles(config.serverPath + 'static/', function(){
+                        fn.msg.nowrap('',true).success('clear the static file done');
+                        next();
+                    });
+
                 }).then(function(next){ // 拷贝 服务器文件
                     fn.copyFiles(serverSource, config.serverPath, function() {
+                        fn.msg.nowrap('',true).success('copy server files done');
                         next();
                     }, config.filterPath);
 
@@ -48,6 +55,7 @@ var sv = {
                         sv.add({
                             'path': config.projectPath, 
                             'callback': function(){
+                                fn.msg.nowrap('',true).success('copy project files done');
                                 next();
 
                             }
@@ -62,7 +70,6 @@ var sv = {
                 }).start();
 
         }).then(function(next){ // server 初始化
-            fn.msg.nowrap('', true);
             fn.runCMD('npm install', function(){
                 next();
 
