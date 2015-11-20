@@ -31,6 +31,25 @@ var
                 
             }
         },
+        gruntFile: {
+            init: function(){
+                if(fs.existsSync(config.userGruntFile)){
+                    fn.msg.error(config.userGruntFile + ' 已经存在，初始化失败');
+
+                } else {
+                    fn.copyFiles(config.basePath + 'init-files/gruntfile/Gruntfile.js', config.userConfigFile);
+                    fn.msg.line().create('Gruntfile.js 创建完成');
+                }
+
+                if(fs.existsSync(config.userPkgFile)){
+                    fn.msg.error(config.userPkgFile + ' 已经存在，创建失败');
+
+                } else {
+                    fn.copyFiles(config.basePath + 'init-files/gruntfile/package.json', config.userConfigFile);
+                    fn.msg.line().create('package.json 创建完成');
+                }
+            }
+        },
         optimize: function(callback){///{
             
             if(typeof userConfig == 'object'){
@@ -267,6 +286,7 @@ var
                 usage: 'jns release',
                 commands: {
                     'init': 'create the config file',
+                    'grunt': 'create the gruntfile and package.json',
                     '-l': [
                             'web socket server start', 
                             'or just start the local server'
@@ -294,6 +314,7 @@ module.exports = function() {
             create: false
         },
         runInit,
+        runGruntInit,
         runHelp;
 
     if(!arguments.length){
@@ -337,6 +358,10 @@ module.exports = function() {
                     runInit = true;
                     break;
 
+                case 'grunt':
+                    runGruntInit = true;
+                    break;
+
                 case '-h':
                 case '--h':
                 default:
@@ -348,6 +373,9 @@ module.exports = function() {
 
     if(runInit){
         release.configFile.init();
+
+    } else if(runGruntInit){
+        release.gruntFile.init();
 
     } else if(runHelp){
         release.help();

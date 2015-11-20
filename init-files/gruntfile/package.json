@@ -1,0 +1,14 @@
+{
+  "name": "jns",
+  "version": "1.0.0",
+  "description": "",
+  "author": "jackness",
+  "license": "ISC",
+  "dependencies": {
+    "inquirer": "~0.8.5",
+    "keypress": "*"
+  },
+  "devDependencies": {
+  }
+}
+
