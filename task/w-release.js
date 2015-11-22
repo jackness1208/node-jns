@@ -37,7 +37,7 @@ var
                     fn.msg.error(config.userGruntFile + ' 已经存在，初始化失败');
 
                 } else {
-                    fn.copyFiles(config.basePath + 'init-files/gruntfile/Gruntfile.js', config.userConfigFile);
+                    fn.copyFiles(config.basePath + 'init-files/gruntfile/Gruntfile.js', config.userGruntFile);
                     fn.msg.line().create('Gruntfile.js 创建完成');
                 }
 
@@ -45,7 +45,7 @@ var
                     fn.msg.error(config.userPkgFile + ' 已经存在，创建失败');
 
                 } else {
-                    fn.copyFiles(config.basePath + 'init-files/gruntfile/package.json', config.userConfigFile);
+                    fn.copyFiles(config.basePath + 'init-files/gruntfile/package.json', config.userPkgFile);
                     fn.msg.line().create('package.json 创建完成');
                 }
             }
@@ -82,8 +82,17 @@ var
 
                     require(config.projectPath + 'Gruntfile.js')(myGrunt);
 
+                    var iDevDependencies = JSON.parse(fs.readFileSync(config.projectPath + 'package.json')).devDependencies,
+                        iDevArr = [];
+
+                    for(var key in iDevDependencies){
+                        if(iDevDependencies.hasOwnProperty(key)){
+                            iDevArr.push(key);
+                        }
+                    }
+
                     userConfig = {
-                        devDependencies: JSON.parse(fs.readFileSync(config.projectPath + 'package.json')).devDependencies,
+                        devDependencies: iDevArr,
                         optimize: myGrunt.config
                     };
                     delete userConfig.optimize.pkg;

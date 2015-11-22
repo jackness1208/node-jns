@@ -1,12 +1,9 @@
 module.exports = function(grunt) {
 
-    var devDependencies: [
-            // 'grunt-contrib-jade',
-            // 'grunt-prettify',
-            // 'grunt-contrib-requirejs',
-            // 'grunt-contrib-sass'
-        ],
+    var 
         gruntConfig = {
+            pkg: grunt.file.readJSON('package.json'),
+
             // // requirejs 压缩 要放在最后， 不然会中断往后的所有任务
             // requirejs: {
             //     'tieba-index': {
@@ -64,42 +61,28 @@ module.exports = function(grunt) {
             //         }
             //     }
             // }
-            
-            // // sass
+            // sass
             // sass: {
-            //     demo: {
-            //         files: {
-            //             'main.css': 'main.scss',
-            //             'widgets.css': 'widgets.scss'
-            //         }
+            //     'weiweiyou': {
+            //         files: [{
+            //             expand: true,
+            //             cwd: 'sass/',
+            //             src: ['*.scss'],
+            //             dest: 'css',
+            //             ext: '.css'
+            //         }]
             //     }
             // },
-            //
+            
             // jade: {
-            //     'test': {
+            //    'weiweiyou': {
             //         options: {
-            //             data: function(dest, src){
-
-            //             }
+            //             pretty: true,
+            //             client: false,
+            //             runtime: false
             //         },
             //         files: {
-            //             'html/index.html': ['tpl/index.jade']
-            //         }
-            //     }
-            // },
-            // prettify: {
-            //     'test': {
-            //         options: {
-            //             "indent": 4,
-            //             "condense": true,
-            //             "indent_inner_html": true,
-            //             "unformatted": [
-            //                 "a",
-            //                 "pre"
-            //             ]
-            //         },
-            //         files: {
-            //             'html/index.html': ['html/index.html']
+            //             'html/': ['tpl/*.jade']
             //         }
             //     }
             // }
@@ -108,20 +91,21 @@ module.exports = function(grunt) {
 
     var taskArr = [];
     for(var key in gruntConfig){
-        if(gruntConfig.hasOwnProperty(key)){
+        if(gruntConfig.hasOwnProperty(key) && key != 'pkg'){
             taskArr.push(key);
         }
     }
 
     // 项目配置
-    gruntConfig.pkg = grunt.file.readJSON('package.json');
     grunt.initConfig(gruntConfig);
-    
 
     // 加载任务插件
-    devDependencies.forEach(function(taskName){
-        grunt.loadNpmTasks(taskName);
-    });
+    for(var key in gruntConfig.pkg.devDependencies){
+        if(gruntConfig.pkg.devDependencies.hasOwnProperty(key) && key != 'grunt'){
+            grunt.loadNpmTasks(key);
+
+        }
+    }
 
     // help 
     var helpFile = function(){
@@ -157,4 +141,3 @@ module.exports = function(grunt) {
     grunt.registerTask('-h', helpFile);
 
 }
-

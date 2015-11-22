@@ -123,23 +123,35 @@ var sv = {
         op = op || {};
 
         if(op.path){
-            fn.copyFiles(op.path, config.serverPath + 'static/', function(){
-                var now = new Date().toString().replace(/^(\w+\s\w+\s\d+\s\d+\s)(\d+\:\d+\:\d+)(.+)$/,'$2');
+            new fn.Promise(function(next){
+                fn.removeFiles(config.serverPath + 'static/', function(){
+                    fn.msg.nowrap('',true).success('clear the static file done');
+                    next();
+                });
 
-                if(wsServer.enable){
-                    wsServer.send('reload', 'reload it! ['+ now +']');
-                }
+            }).then(function(next){
+                fn.copyFiles(op.path, config.serverPath + 'static/', function(){
+                    var now = new Date().toString().replace(/^(\w+\s\w+\s\d+\s\d+\s)(\d+\:\d+\:\d+)(.+)$/,'$2');
 
+                    if(wsServer.enable){
+                        wsServer.send('reload', 'reload it! ['+ now +']');
+                    }
+
+                    next();
+
+                },/node_modules$/ig, function(filename, textcontent){
+                    if(wsServer.enable){
+                        return wsServer.render(filename, textcontent);
+                    } else {
+                        return textcontent;
+                    }
+
+                });
+            }).then(function(next){
                 op.callback && op.callback();
 
-            },/node_modules$/ig, function(filename, textcontent){
-                if(wsServer.enable){
-                    return wsServer.render(filename, textcontent);
-                } else {
-                    return textcontent;
-                }
-
-            });
+            }).start();
+            
 
         }
     },
