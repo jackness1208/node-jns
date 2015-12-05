@@ -1,6 +1,7 @@
 var express = require('express'),
 	http = require('http'),
 	path = require('path'),
+	jade = require('jade'),
 	domain = require('domain'),
 	swig = require('swig'),
 	MemStore = express.session.MemoryStore,
@@ -15,8 +16,13 @@ app.configure(function() {
 	app.set('port', process.env.PORT || config.port);
 	app.set('views', path.join(serverPath, 'server/components'));
 
-    app.engine('tpl', swig.renderFile);
-    app.set('view engine', 'tpl');
+
+    // 格式化 html
+    app.locals.pretty = true;
+    app.set('view engine', 'jade');
+
+    // app.engine('tpl', swig.renderFile);
+    // app.set('view engine', 'tpl');
 	
     // app.engine('.tpl', ejs.__express);
 	// app.set('view engine', 'tpl');

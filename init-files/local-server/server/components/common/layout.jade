@@ -1,0 +1,54 @@
+doctype html
+html
+    head
+        meta(charset="utf-8")
+        meta(name="HandheldFriendly", content="true")
+        meta(name="apple-mobile-web-app-capable", content="yes")
+        meta(name="viewport", content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
+        title 
+            block title
+        script.
+            !function(){
+                var 
+                    docEl = document.documentElement,
+                    dpr = window.devicePixelRatio || 1,
+                    // 修复部分机型 window.screen.width === docEl.clientWidth 情况, 正常应该是 window.screen.width == docEl.clientWidth * dpr
+                    fixDpr = window.screen.width === docEl.clientWidth ? dpr : 1,
+
+                    screenWidth = window.screen.width * fixDpr,
+                    screenHeight = window.screen.height * fixDpr,
+                    clientWidth = screenWidth > screenHeight? screenHeight: screenWidth,
+                    clientHeight = screenWidth > screenHeight? screenWidth: screenHeight,
+                    fontEl = document.createElement('style'), 
+                    metaEl = document.querySelector('meta[name="viewport"]'), 
+                    rem = clientWidth / 10, 
+                    vrem = clientHeight / 10,
+                    scale = 1 / dpr; // 设置viewport，进行缩放，达到高清效果 
+
+                metaEl.setAttribute('content', [
+                    'width=' + clientWidth,
+                    'initial-scale=' + scale,
+                    'maximum-scale='+ scale
+                    //'minimum-scale=' + scale, // 加上这2个属性会出现 android会出现 缩放不正常
+                    //'user-scalable=no'
+                ].join(','));
+
+                docEl.setAttribute('data-dpr', dpr); // 动态写入样式 
+                docEl.firstElementChild.appendChild(fontEl); 
+
+                fontEl.innerHTML = [
+                    'html{font-size:' + rem + 'px!important;}',
+                    '@media screen and (min-width: '+ clientHeight +'px){',
+                        'html{font-size:'+ vrem +'px!important;}',
+                    '}',
+                ].join('');
+
+            }();
+
+        block head
+
+    body
+        block body
+
+        block script
+
