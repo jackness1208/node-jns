@@ -38,10 +38,11 @@ var sv = {
                     });
 
                 }).then(function(next){ // 清空文件夹内容
-                    fn.removeFiles(config.serverPath + 'static/', function(){
-                        fn.msg.nowrap('',true).success('clear the static file done');
-                        next();
-                    });
+                    // fn.removeFiles(config.serverPath + 'static/', function(){
+                    //     fn.msg.nowrap('',true).success('clear the static file done');
+                    //     next();
+                    // });
+                    next();
 
                 }).then(function(next){ // 拷贝 服务器文件
                     fn.copyFiles(serverSource, config.serverPath, function() {
