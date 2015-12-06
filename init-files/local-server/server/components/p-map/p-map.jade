@@ -1,0 +1,36 @@
+doctype html
+html
+    head
+        meta(charset="utf-8")
+        title html5
+        meta(name="HandheldFriendly", content="true")
+        meta(name="viewport", content="width=device-width, initial-scale=1.0, user-scalable=0")
+        link(rel="stylesheet", href="#{config.domain}components/p-map/p-map.css", type="text/css")
+        script.
+            !function(){
+                if(!/iPhone|Android/i.test(navigator.userAgent)){
+                    return;
+                }
+                var screenWidth = document.documentElement.clientWidth;
+                var meta = document.createElement('meta'),
+                    scale = screenWidth / 320;
+                meta.name = 'viewport';
+                meta.content = 'width=320, initial-scale='+ scale +', maximum-scale='+ scale +', minimum-scale='+ scale +', user-scalable=0';
+
+                document.getElementsByTagName('head')[0].appendChild(meta);
+            }();
+            
+    body
+        div.main-mod
+            div.main-mod-tl site map
+            div.main-mod-cnt.treelist
+                ul#treeList
+
+        script.
+            var treeData = !{JSON.stringify(treeData, null, 4)};
+
+        script(src="#{config.domain}lib/requirejs/require.min.js")
+        script(src="#{config.domain}components/p-map/p-map.min.js")
+            
+
+

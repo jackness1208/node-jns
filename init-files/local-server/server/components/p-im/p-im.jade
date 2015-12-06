@@ -1,0 +1,37 @@
+extends ../common/layout
+
+block title 
+    | MINI IM
+
+block head
+    script(src="http://#{config.serverAdress}:#{config.tool.im.websocket.port}/socket.io/socket.io.js")
+
+    link(rel="stylesheet", href="#{config.domain}components/p-im/p-im.css", type="text/css", charset="utf-8")
+
+block body
+    div.im-area
+        div.im-head
+            h3.h-tl Mini IM
+
+        // + 广场
+        div.im-square
+        // - 广场
+
+        // + 工具区域
+        div.im-tool
+        // - 工具区域
+
+        // + 对话区域
+        div.im-editor
+            textarea.im-editor-ext#imEditor
+        // - 对话区域
+
+        // + 姓名区域
+        div.im-namebox
+            input.im-namebox-ipt#imNameIpt(type="text", value="", placeholder="昵称")
+        // - 姓名区域
+
+block script
+    script(src="#{config.domain}lib/requirejs/require.min.js")
+    script(src="#{config.domain}components/p-im/p-im.min.js")
+

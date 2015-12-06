@@ -38,10 +38,13 @@ var sv = {
                     });
 
                 }).then(function(next){ // 清空文件夹内容
-                    // fn.removeFiles(config.serverPath + 'static/', function(){
-                    //     fn.msg.nowrap('',true).success('clear the static file done');
-                    //     next();
-                    // });
+                    if(!fs.existsSync(config.serverPath + 'static/')){
+                        fs.mkdirSync(config.serverPath + 'static');
+                    }
+                    fn.removeFiles(config.serverPath + 'static/', function(){
+                        fn.msg.nowrap('',true).success('clear the static file done');
+                        next();
+                    });
                     next();
 
                 }).then(function(next){ // 拷贝 服务器文件

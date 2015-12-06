@@ -50,105 +50,79 @@ var
                 }
             }
         },
-        optimize: function(callback){///{
+        grunt: {
             
-            if(typeof userConfig == 'object'){
-
-            } else if(fs.existsSync(config.projectPath + 'Gruntfile.js') && fs.existsSync(config.projectPath + 'package.json')){
-                !function(){
-                    var grunt = require('grunt');
+            init: function(){
+                var grunt = require('grunt');
                     
-                    var myGrunt = {
-                            loadNpmTasks: function(){},
-                            registerTask: function(){},
-                            registerMultiTask: function(){},
-                            file: grunt.file,
-                            task: grunt.task,
-                            initConfig: function(config){
-                                this.config = {};
-                                for(var key in config){
-                                    if(config.hasOwnProperty(key)){
-                                        !~key.indexOf('watch') && (this.config[key] = config[key]);
-                                    }
+                var myGrunt = {
+                        loadNpmTasks: function(){},
+                        registerTask: function(){},
+                        registerMultiTask: function(){},
+                        file: grunt.file,
+                        task: grunt.task,
+                        initConfig: function(config){
+                            this.config = {};
+                            for(var key in config){
+                                if(config.hasOwnProperty(key)){
+                                    !~key.indexOf('watch') && (this.config[key] = config[key]);
                                 }
-                            },
-                            util: grunt.util,
-                            fail: grunt.fail,
-                            log: grunt.log,
-                            option: grunt.option,
-                            template: grunt.template
-                        };
-
-
-                    require(config.projectPath + 'Gruntfile.js')(myGrunt);
-
-                    var iDevDependencies = JSON.parse(fs.readFileSync(config.projectPath + 'package.json')).devDependencies,
-                        iDevArr = [];
-
-                    for(var key in iDevDependencies){
-                        if(iDevDependencies.hasOwnProperty(key)){
-                            iDevArr.push(key);
-                        }
-                    }
-
-                    userConfig = {
-                        devDependencies: iDevArr,
-                        optimize: myGrunt.config
+                            }
+                        },
+                        util: grunt.util,
+                        fail: grunt.fail,
+                        log: grunt.log,
+                        option: grunt.option,
+                        template: grunt.template
                     };
-                    delete userConfig.optimize.pkg;
-                }();
-
-            } else {
-                fn.msg.error(config.userConfigFile + ' is not work');
-                return callback && callback();
-            }
 
 
-            var promise = new fn.Promise();
-            
-            promise.then(function(next){
-                if(userConfig.devDependencies && userConfig.devDependencies.length){
-                    var myPackage = [];
-                    userConfig.devDependencies.forEach(function(item, i){
-                        if(!fs.existsSync(config.basePath + 'node_modules/' + item)){
-                            myPackage.push(item);
-                        }
-                    });
-                    if(myPackage.length){
-                        fn.runCMD('npm install ' + myPackage.join(' ') + ' --save-dev', function(){
-                            next(myPackage);
-                        }, config.basePath);
-                    } else {
-                        next(false);
-                    }
-                } else {
-                    next(false);
-                }
+                require(config.projectPath + 'Gruntfile.js')(myGrunt);
 
-            }).then(function(packages, next){
+                var iDevDependencies = JSON.parse(fs.readFileSync(config.projectPath + 'package.json')).devDependencies;
+
+                var userConfig = {
+                    type: 'grunt',
+                    devDependencies: iDevDependencies,
+                    optimize: myGrunt.config
+                };
+                delete userConfig.optimize.pkg;
+
+                return userConfig;
+
+            },
+            build: function(optimizeConfig, callback){
                 process.chdir(config.basePath);
             
                 var grunt = require('grunt'),
-                    gruntConfig = {
-                    pkg: grunt.file.readJSON(config.basePath + 'package.json' )
-                };
+                    gruntConfig;
 
-                
+                if(fs.existsSync(config.projectPath + 'package.json')){
+                    gruntConfig = {
+                        pkg: grunt.file.readJSON(config.projectPath + 'package.json' )
+                    };
+
+                } else {
+                    gruntConfig = {
+                        pkg: grunt.file.readJSON(config.basePath + 'package.json' )
+                    };
+
+                }
+
                 for(var key in gruntConfig.pkg.devDependencies){
                     if( gruntConfig.pkg.devDependencies.hasOwnProperty(key) ){
                         ~key.indexOf('grunt-') && grunt.loadNpmTasks(key);
                     }
                 }
 
-                packages && packages.forEach(function(name, i){
-                    grunt.loadNpmTasks(name);
-                });
+
+                // packages && packages.forEach(function(name, i){
+                //     grunt.loadNpmTasks(name);
+                // });
 
                 process.chdir(config.projectPath);
                 
                 // 数据处理
-                var optimizeConfig = userConfig.optimize;
-
                 var taskArr = [];
                 for(var key in optimizeConfig){
                     optimizeConfig.hasOwnProperty(key) && (
@@ -175,10 +149,177 @@ var
                 //     callback && callback();
                 // };
                 grunt.task.start();
-                next();
+            }
+        },
+        gulp: {
+            load: function(){
 
+            },
+
+            build: function(){
+                
+            }
+        },
+        optimize: function(callback){///{
+            var she = this;
+            if(typeof userConfig == 'object'){
+
+            } else if(fs.existsSync(config.projectPath + 'Gruntfile.js') && fs.existsSync(config.projectPath + 'package.json')){
+                userConfig = she.grunt.init();
+
+            } else if(fs.existsSync(config.projectPath + 'gulpfile.js') && fs.existsSync(config.projectPath + 'package.json')){
+                userConfig = she.gulp.init();
+                
+            } else {
+                fn.msg.error('no configfile can work');
+                return callback && callback();
+
+            }
+
+
+            new fn.Promise(function(next){ // init package
+
+                var iPackage = [],
+                    iAttr = '',
+                    iPath = '';
+                switch(fn.type(userConfig.devDependencies)){
+                    case 'array':
+                        userConfig.devDependencies.forEach(function(item, i){
+                            if(!fs.existsSync(config.basePath + 'node_modules/' + item)){
+                                iPackage.push(item);
+                            }
+                        });
+                        break;
+
+                    case 'object':
+                        for(var key in userConfig.devDependencies){
+                            if(userConfig.devDependencies.hasOwnProperty(key)){
+                                iAttr = userConfig.devDependencies[key].replace(/^\^/,'');
+                                iPath = config.basePath + 'node_module/' + key;
+
+                                if(!fs.existsSync(iPath) || JSON.parse(iPath + '/package.json').version != key){
+                                    iPackage.push(key + '@' + iAttr);
+
+                                }
+                            }
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+
+                if(iPackage.length){
+                    fn.runCMD('npm install ' + myPackage.join(' ') + ' --save-dev', function(){
+                        next(myPackage);
+                    }, config.basePath);
+
+                } else {
+                    next(false);
+                }
+
+            }).then(function(next){
+                switch(userConfig.type){
+                    case 'gulp':
+                        she.gulp.build(userConfig.optimize, callback);
+                        break;
+
+                    case 'grunt':
+                    default:
+                        she.grunt.build(userConfig.optimize, callback);
+                        break;
+                }
 
             }).start();
+
+            
+            // if(typeof userConfig == 'object'){
+
+            // } else if(fs.existsSync(config.projectPath + 'Gruntfile.js') && fs.existsSync(config.projectPath + 'package.json')){
+            //     she.gulp.load();
+                
+
+            // } else {
+            //     fn.msg.error(config.userConfigFile + ' is not work');
+            //     return callback && callback();
+            // }
+
+
+            // var promise = new fn.Promise();
+            
+            // promise.then(function(next){
+            //     if(userConfig.devDependencies && userConfig.devDependencies.length){
+            //         var myPackage = [];
+            //         userConfig.devDependencies.forEach(function(item, i){
+            //             if(!fs.existsSync(config.basePath + 'node_modules/' + item)){
+            //                 myPackage.push(item);
+            //             }
+            //         });
+            //         if(myPackage.length){
+            //             fn.runCMD('npm install ' + myPackage.join(' ') + ' --save-dev', function(){
+            //                 next(myPackage);
+            //             }, config.basePath);
+            //         } else {
+            //             next(false);
+            //         }
+            //     } else {
+            //         next(false);
+            //     }
+
+            // }).then(function(packages, next){
+            //     process.chdir(config.basePath);
+            
+            //     var grunt = require('grunt'),
+            //         gruntConfig = {
+            //         pkg: grunt.file.readJSON(config.basePath + 'package.json' )
+            //     };
+
+                
+            //     for(var key in gruntConfig.pkg.devDependencies){
+            //         if( gruntConfig.pkg.devDependencies.hasOwnProperty(key) ){
+            //             ~key.indexOf('grunt-') && grunt.loadNpmTasks(key);
+            //         }
+            //     }
+
+            //     packages && packages.forEach(function(name, i){
+            //         grunt.loadNpmTasks(name);
+            //     });
+
+            //     process.chdir(config.projectPath);
+                
+            //     // 数据处理
+            //     var optimizeConfig = userConfig.optimize;
+
+            //     var taskArr = [];
+            //     for(var key in optimizeConfig){
+            //         optimizeConfig.hasOwnProperty(key) && (
+            //             taskArr.push(key),
+            //             gruntConfig[key] = optimizeConfig[key]
+            //         );
+            //     }
+            //     grunt.option('force', true);
+            //     grunt.initConfig(gruntConfig);
+            //     grunt.file.setBase(config.projectPath);
+            //     grunt.task.run(taskArr);
+            //     grunt.task.options({
+            //         error: function(er){
+            //             fn.msg.error(er);
+            //             return false;
+            //         },
+            //         done: function(){
+            //             fn.msg.success('optimize is done');
+            //             callback && callback();
+            //         }
+            //     });
+            //     // grunt.task.options.done = function(){
+            //     //     fn.msg.success('optimize is done');
+            //     //     callback && callback();
+            //     // };
+            //     grunt.task.start();
+            //     next();
+
+
+            // }).start();
 
             
 

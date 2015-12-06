@@ -1,0 +1,5 @@
+$psdWidth: 640!default;
+
+@function rem($val){
+    @return $val / $psdWidth * 1rem;
+}

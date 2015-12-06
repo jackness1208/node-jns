@@ -17,9 +17,6 @@ process.on('exit', function(code){
 d.run(function(){
 
 switch(myArgv[0]){
-    case 'grunt':
-        require(__dirname.replace("\\","/") + '/../task/w-grunt.js').apply(global, myArgv.slice(1));
-        break;
     
     case 'test':
         require(__dirname.replace("\\","/") + '/../task/w-test.js').apply(global, myArgv.slice(1));

@@ -3,7 +3,6 @@ var express = require('express'),
 	path = require('path'),
 	jade = require('jade'),
 	domain = require('domain'),
-	swig = require('swig'),
 	MemStore = express.session.MemoryStore,
 	// ejs = require('ejs'),
 	fn = require('./libs/global.js'),
@@ -134,7 +133,7 @@ new fn.Promise(function(next){ // 获取 components 里面所有文件
 
         // respond with html page
         if (req.accepts('html')) {
-        res.status(404).render('common/404', { url: req.url });
+        res.status(404).render('p-404/p-404', { url: req.url });
         return;
         }
 

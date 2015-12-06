@@ -7,7 +7,7 @@ module.exports = {
 	// 站点端口
 	port: 5000,
 	// 站点 ico
-	favicon: path.join(__dirname, '../views/components/common/images/favicon.ico'),
+	favicon: path.join(__dirname, '../views/common/images/favicon.ico'),
 
 	// 站点主域
 	domain:'/',
