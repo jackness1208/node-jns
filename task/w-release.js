@@ -10,6 +10,7 @@ var inquirer = require("inquirer"),
         try{
             return require(config.userConfigFile);
         } catch(er){
+            console.log(er)
             return undefined;
         }
     })();
@@ -171,6 +172,8 @@ var
                 userConfig = she.gulp.init();
                 
             } else {
+                console.log(fs.existsSync(config.projectPath + 'Gruntfile.js'))
+                console.log(fs.existsSync(config.projectPath + 'package.json'))
                 fn.msg.error('no configfile can work');
                 return callback && callback();
 
@@ -194,11 +197,10 @@ var
                     case 'object':
                         for(var key in userConfig.devDependencies){
                             if(userConfig.devDependencies.hasOwnProperty(key)){
-                                iAttr = userConfig.devDependencies[key].replace(/^\^/,'');
-                                iPath = config.basePath + 'node_module/' + key;
+                                iPath = config.basePath + 'node_modules/' + key;
 
-                                if(!fs.existsSync(iPath) || JSON.parse(iPath + '/package.json').version != key){
-                                    iPackage.push(key + '@' + iAttr);
+                                if(!fs.existsSync(iPath)){
+                                    iPackage.push(key);
 
                                 }
                             }
@@ -210,8 +212,8 @@ var
                 }
 
                 if(iPackage.length){
-                    fn.runCMD('npm install ' + myPackage.join(' ') + ' --save-dev', function(){
-                        next(myPackage);
+                    fn.runCMD('npm install ' + iPackage.join(' ') + ' --save-dev', function(){
+                        next(iPackage);
                     }, config.basePath);
 
                 } else {
