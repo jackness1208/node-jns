@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 var 
     inquirer = require("inquirer"),
@@ -6,6 +6,37 @@ var
     config = require('../lib/config'),
     path = require('path'),
     fs = require('fs');
+
+var 
+    fn = {
+        copyFiles: function(p){
+            new fn.Promise(function(next){
+                fn.timer.start({
+                    onMark: function(file){
+                        fn.msg.create(path.relative(config.projectPath, file));
+                    },
+                    onEnd: function(data){
+                        fn.msg.line().success('初始化完成。共创建 ' + data.source.length + ' 个文件, 耗时 ' + data.time + ' ms');
+                    }
+                });
+                fn.copyFiles(
+                    path.join(config.basePath, p),
+                    path.join(config.projectPath),
+                    function(){
+                        next();
+                    }
+                );
+
+
+            }).then(function(next){
+                fn.timer.end();
+                next();
+
+            }).start();
+
+        }
+
+    };
 
 var 
     attributes = {
@@ -26,11 +57,15 @@ var
 
         },
         grunt: function(){
-
+            fn.copyFiles('init-files/grunt');
         },
 
         gulp: function(){
-            
+            fn.copyFiles('init-files/gulp');
+        },
+        // 爬虫
+        reptile: function(){
+            fn.copyFiles('init-files/reptile');
         },
 
         // 重命名
@@ -102,37 +137,7 @@ var
 
 
             }).start();
-        },
-
-
-        // 爬虫
-        reptile: function(){
-            new fn.Promise(function(next){
-                fn.timer.start({
-                    onMark: function(file){
-                        fn.msg.create(path.relative(config.projectPath, file));
-                    },
-                    onEnd: function(data){
-                        fn.msg.line().success('初始化完成。共创建 ' + data.source.length + ' 个文件, 耗时 ' + data.time + ' ms');
-                    }
-                });
-                fn.copyFiles(
-                    path.join(config.basePath, 'init-files/reptile'),
-                    path.join(config.projectPath),
-                    function(){
-                        next();
-                    }
-                );
-
-
-            }).then(function(next){
-                fn.timer.end();
-                next();
-
-            }).start();
-
         }
-
     };
 
 

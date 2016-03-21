@@ -1,13 +1,13 @@
-
-  "name": "jns",
+{
+  "name": "jns-grunt",
   "version": "1.0.0",
   "description": "",
+  "main": "Gruntfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "author": "jackness",
   "license": "ISC",
-  "dependencies": {
-    "inquirer": "~0.8.5",
-    "keypress": "*"
-  },
   "devDependencies": {
     "requirejs": "^2.1.19",
     "uglify": "^0.1.5",
@@ -18,4 +18,3 @@
     "grunt-jade": "^0.5.1"
   }
 }
-
