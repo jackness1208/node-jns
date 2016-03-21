@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+"use strict";
+
 var myArgv = process.argv.splice(2),
     domain = require('domain'),
     d = domain.create();
@@ -18,22 +20,6 @@ d.run(function(){
 
 switch(myArgv[0]){
     
-    case 'test':
-        require(__dirname.replace("\\","/") + '/../task/w-test.js').apply(global, myArgv.slice(1));
-        break;
-
-    case 'mod':
-        require(__dirname.replace("\\","/") + '/../task/w-mod.js').apply(global, myArgv.slice(1));
-        break;
-    
-    case 'reptile':
-        require(__dirname.replace("\\","/") + '/../task/w-reptile.js').apply(global, myArgv.slice(1));
-        break;
-
-    case 'rename':
-        require(__dirname.replace("\\","/") + '/../task/w-rename.js').apply(global, myArgv.slice(1));
-        break;
-    
     case 'server':
         require(__dirname.replace("\\","/") + '/../task/w-server.js').apply(global, myArgv.slice(1));
         break;
@@ -42,15 +28,19 @@ switch(myArgv[0]){
         require(__dirname.replace("\\","/") + '/../task/w-release.js').apply(global, myArgv.slice(1));
         break;
 
-    case '-v': 
-    case '--version': 
-        require(__dirname.replace("\\","/") + '/../task/w-version.js').apply(global, myArgv.slice(1));
+    case 'init':
+        require(__dirname.replace("\\","/") + '/../task/w-init.js').apply(global, myArgv.slice(1));
         break;
 
+    case '-v': 
+    case '--version': 
     case '-h':
     case '--help':
+        require(__dirname.replace("\\","/") + '/../task/w-base.js').apply(global, myArgv);
+        break;
+
     default:
-        require(__dirname.replace("\\","/") + '/../task/w-help.js').apply(global, myArgv.slice(1));
+        require(__dirname.replace("\\","/") + '/../task/w-base.js').apply(global, myArgv);
         break;
 }
 
