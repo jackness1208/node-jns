@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../src/js/second.js"],"names":["console","log"],"mappings":";;AAAAA,QAAQC,IAAI","file":"second.js","sourcesContent":["console.log('second.js');\r\n"]}

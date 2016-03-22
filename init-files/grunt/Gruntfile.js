@@ -13,6 +13,11 @@ module.exports = function(grunt) {
                     }
                 }
                 return r;
+            },
+            varRender: function(str, op){
+                return str
+                    .replace(/\{\$src\}/g, op.src)
+                    .replace(/\{\$dest\}/g, op.dest);
             }
         },
         gruntConfig = {
@@ -24,22 +29,16 @@ module.exports = function(grunt) {
                     options: {
                         // 放在生成后的压缩文件的头部注释文案
                         banner: '/*! builded <%= grunt.template.today() %> */\n',
-                        // 生成的map文件地址的 相对路径
-                        sourceMapRoot: '../../',
-                        // 生成 map文件的地址
-                        sourceMap: function(p){
-                            var f = p.split("/"),
+                        sourceMap: true,
+                        sourceMapName: function(p){
+                            var 
+                                f = p.split("/"),
                                 filename = f.pop(),
                                 nav = f.join("/") + "/";
                             return nav + "map/" +  filename.replace('.js','.map');
                         },
-                        // 用于定义 map文件地址 并放在压缩文件底部， url相对于 压缩文件
-                        sourceMappingURL: function(p){
-                            var f = p.split("/"),
-                                filename = f.pop(),
-                                nav = f.join("/") + "/";
-                            return "map/" +  filename.replace('.js','.map');
-                        }
+                        sourceMapIncludeSources: true
+
                     },
                     files: [{
                         expand: true,
@@ -54,6 +53,10 @@ module.exports = function(grunt) {
             // sass
             sass: fn.keyPrase(iConfig, function(config){
                 return {
+                    options: {
+                        sourcemap: 'none'
+
+                    },
                     files: [{
                         expand: true,
                         cwd: path.join(config.src, 'sass'),
@@ -82,6 +85,28 @@ module.exports = function(grunt) {
                 };
 
             }),
+            concat: fn.keyPrase(iConfig, function(config){
+                var 
+                    r = {},
+                    pushFiles = function(src, dest){
+                        var iKey = fn.varRender(src, config);
+                        r[iKey] = [];
+                        dest.forEach(function(item){
+                            r[iKey].push(fn.varRender(item, config));
+                        });
+                    };
+                if(config.concat){
+                    for(var key in config.concat){
+                        if(config.concat.hasOwnProperty(key)){
+                            pushFiles(key, config.concat[key]);
+                        }
+                    }
+                }
+                
+                return {
+                    files: r
+                };
+            }),
 
             // copy
             copy: fn.keyPrase(iConfig, function(config){
@@ -95,9 +120,18 @@ module.exports = function(grunt) {
                         };
                     },
                     r = [
-                        pushFiles(path.join(config.src, 'html'), path.join(config.dest, 'html')),
-                        pushFiles(path.join(config.src, 'css'), path.join(config.dest, 'css')),
-                        pushFiles(path.join(config.src, 'images'), path.join(config.dest, 'images'))
+                        pushFiles(
+                            path.join(config.src, 'html'), 
+                            path.join(config.dest, 'html')
+                        ),
+                        pushFiles(
+                            path.join(config.src, 'css'),
+                            path.join(config.dest, 'css')
+                        ),
+                        pushFiles(
+                            path.join(config.src, 'images'), 
+                            path.join(config.dest, 'images')
+                        )
                     ],
                     i, key;
 
@@ -106,7 +140,12 @@ module.exports = function(grunt) {
                 for(key in config.copy){
                     if(config.copy.hasOwnProperty(key)){
                         for(i = 0; i < config.copy[key].length; i++){
-                            r.push(pushFiles(key, config.copy[key][i]));
+                            r.push(
+                                pushFiles(
+                                    fn.varRender(key, config), 
+                                    fn.varRender(config.copy[key][i], config)
+                                )
+                            );
                         }
 
                     }
@@ -114,8 +153,19 @@ module.exports = function(grunt) {
                 return {
                     files: r
                 };
-            })
+            }),
+            watch: (function(){
+                // var 
+                //     r = fn.keyPrase(iConfig, funciton(config){
+                //         return {
+                //             css: {
+                                
+                //             }
+                //         };
 
+                //     });
+
+            })()
 
         };
 
@@ -123,7 +173,7 @@ module.exports = function(grunt) {
         taskArr = [],
         key;
     for(key in gruntConfig){
-        if(gruntConfig.hasOwnProperty(key) && key != 'pkg'){
+        if(gruntConfig.hasOwnProperty(key) && key != 'pkg' && key != 'watch'){
             taskArr.push(key);
         }
     }
@@ -166,9 +216,11 @@ module.exports = function(grunt) {
 
         } else {
             r = taskArr;
-
         }
         grunt.task.run(r);
+    });
+    grunt.registerTask('watch', function(name){
+        grunt.task.run('watch:' + name + '-all');
     });
     grunt.registerTask('default', helpFile);
     grunt.registerTask('-h', helpFile);
