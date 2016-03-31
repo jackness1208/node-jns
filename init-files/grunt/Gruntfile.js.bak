@@ -162,57 +162,64 @@ module.exports = function(grunt) {
                     files: r
                 };
             }),
-            
-            watch: (function(){
-
-                var 
-                    r = {},
-                    param = fn.keyPrase(iConfig, function(config, name){
-                            var 
-                                opt = {
-                                    // event: ['add', 'deleted'],
-                                    // reload: true
-                                };
-                            return {
-                                sass: {
-                                    files: path.join(config.src, 'sass', '**/*.scss'),
-                                    tasks: ['sass:' + name, 'copy:' + name],
-                                    options: opt
-                                },
-                                js: {
-                                    files: path.join(config.src, 'js', '**/*.js'),
-                                    tasks: ['js:' + name, 'copy:' + name],
-                                    options: opt
-                                },
-                                jade: {
-                                    files: path.join(config.src, 'jade', '**/*.jade'),
-                                    tasks: ['html:' + name, 'copy:' + name],
-                                    options: opt
-                                },
-                                img: {
-                                    files: path.join(config.src, 'images', '**/*.*'),
-                                    tasks: ['copy:' + name],
-                                    options: opt
-
-                                },
-                            };
-
-                        });
-
-                    var key, key2;
-
-                    for(key in param){
-                        if(param.hasOwnProperty(key)){
-                            for(key2 in param[key]){
-                                if(param[key].hasOwnProperty(key2)){
-                                    r[key + '-' + key2] = param[key][key2];
-                                }
-                            }
-                        }
+            watch: {
+                proj: {
+                    files: ['src/**'],
+                    tasks: ['build'],
+                    options: {
                     }
-                    return r;
+                }
+            }
+            // watch: (function(){
 
-            })()
+            //     var 
+            //         r = {},
+            //         param = fn.keyPrase(iConfig, function(config, name){
+            //                 var 
+            //                     opt = {
+            //                         // event: ['add', 'deleted'],
+            //                         // reload: true
+            //                     };
+            //                 return {
+            //                     sass: {
+            //                         files: path.join(config.src, 'sass', '**/*.scss'),
+            //                         tasks: ['css:' + name, 'copy:' + name],
+            //                         options: opt
+            //                     },
+            //                     js: {
+            //                         files: path.join(config.src, 'js', '**/*.js'),
+            //                         tasks: ['js:' + name, 'copy:' + name],
+            //                         options: opt
+            //                     },
+            //                     jade: {
+            //                         files: path.join(config.src, 'jade', '**/*.jade'),
+            //                         tasks: ['html:' + name, 'copy:' + name],
+            //                         options: opt
+            //                     },
+            //                     img: {
+            //                         files: path.join(config.src, 'images', '**/*.*'),
+            //                         tasks: ['copy:' + name],
+            //                         options: opt
+
+            //                     },
+            //                 };
+
+            //             });
+
+            //         var key, key2;
+
+            //         for(key in param){
+            //             if(param.hasOwnProperty(key)){
+            //                 for(key2 in param[key]){
+            //                     if(param[key].hasOwnProperty(key2)){
+            //                         r[key + '-' + key2] = param[key][key2];
+            //                     }
+            //                 }
+            //             }
+            //         }
+            //         return r;
+
+            // })()
 
         };
 
@@ -266,10 +273,8 @@ module.exports = function(grunt) {
         }
         grunt.task.run(r);
     });
-
-    
+    grunt.registerTask('watch', ['watch']);
     grunt.registerTask('default', helpFile);
     grunt.registerTask('-h', helpFile);
 
 };
-
