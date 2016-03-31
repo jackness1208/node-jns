@@ -9,7 +9,7 @@ module.exports = function(grunt) {
                 var r = {};
                 for(var key in config){
                     if(config.hasOwnProperty(key)){
-                        r[key] = handle(config[key]);
+                        r[key] = handle(config[key], key);
                     }
                 }
                 return r;
@@ -155,15 +155,53 @@ module.exports = function(grunt) {
                 };
             }),
             watch: (function(){
-                // var 
-                //     r = fn.keyPrase(iConfig, funciton(config){
-                //         return {
-                //             css: {
-                                
-                //             }
-                //         };
 
-                //     });
+                var 
+                    r = {},
+                    param = fn.keyPrase(iConfig, function(config, name){
+                            var 
+                                opt = {
+                                    event: ['add', 'deleted'],
+                                    reload: true
+                                };
+                            return {
+                                sass: {
+                                    files: path.join(config.src, 'sass', '**/*.scss'),
+                                    tasks: ['css:' + name, 'copy:' + name],
+                                    options: opt
+                                },
+                                js: {
+                                    files: path.join(config.src, 'js', '**/*.js'),
+                                    tasks: ['js:' + name, 'copy:' + name],
+                                    options: opt
+                                },
+                                jade: {
+                                    files: path.join(config.src, 'jade', '**/*.jade'),
+                                    tasks: ['html:' + name, 'copy:' + name],
+                                    options: opt
+                                },
+                                img: {
+                                    files: path.join(config.src, 'images', '**/*.*'),
+                                    tasks: ['copy:' + name],
+                                    options: opt
+
+                                },
+                            };
+
+                        });
+
+                    var key, key2;
+
+                    for(key in param){
+                        if(param.hasOwnProperty(key)){
+                            for(key2 in param[key]){
+                                if(param[key].hasOwnProperty(key2)){
+                                    r[key + '-' + key2] = param[key][key2];
+                                }
+                            }
+                        }
+                    }
+                    return r;
 
             })()
 
@@ -177,7 +215,7 @@ module.exports = function(grunt) {
             taskArr.push(key);
         }
     }
-    // console.log(JSON.stringify(gruntConfig.copy, null, 4));
+    console.log(JSON.stringify(gruntConfig.watch, null, 4));
 
     // 项目配置
     grunt.initConfig(gruntConfig);
@@ -220,7 +258,18 @@ module.exports = function(grunt) {
         grunt.task.run(r);
     });
     grunt.registerTask('watch', function(name){
-        grunt.task.run('watch:' + name + '-all');
+        if(name){
+            grunt.task.run([
+                'watch:' + name + '-sass', 
+                'watch:' + name + '-jade', 
+                'watch:' + name + '-img', 
+                'watch:' + name + '-js'
+            ]);
+        } else {
+            grunt.task.run('watch');
+
+
+        }
     });
     grunt.registerTask('default', helpFile);
     grunt.registerTask('-h', helpFile);
