@@ -170,8 +170,9 @@ module.exports = function(grunt) {
                     param = fn.keyPrase(iConfig, function(config, name){
                             var 
                                 opt = {
-                                    // event: ['add', 'deleted'],
-                                    // reload: true
+                                    event: ['add', 'deleted'],
+                                    reload: true,
+                                    livereload: 5000
                                 };
                             return {
                                 sass: {
@@ -194,7 +195,7 @@ module.exports = function(grunt) {
                                     tasks: ['copy:' + name],
                                     options: opt
 
-                                },
+                                }
                             };
 
                         });
