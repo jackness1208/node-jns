@@ -1,1 +1,39 @@
-* {margin: 0}
+@mixin attr2all($cssAttr, $val...){
+    -webkit-#{$cssAttr}: $val;
+       -moz-#{$cssAttr}: $val;
+        -ms-#{$cssAttr}: $val;
+         -o-#{$cssAttr}: $val;
+            #{$cssAttr}: $val;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: #eee;
+}
+.logo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 100px;
+    height: 100px;
+    margin: -50px 0 0 -50px;
+    background: url(../images/logo.gif);
+    @include attr2all(transition, .4s);
+}
+.title {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    text-align: center;
+    margin-top: 60px;
+    color: #474747;
+    font-size: 16px;
+}
+@for $i from 1 through 4 {
+    .ani0#{$i} {
+        @include attr2all(transform, rotate(#{($i - 1) * 90}deg));
+    }
+}
+

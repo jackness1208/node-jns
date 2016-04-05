@@ -188,7 +188,8 @@ module.exports = function(grunt) {
                 var 
                     r = {
                         options: {
-                            livereload: lrPort
+                            livereload: lrPort,
+                            debounceDelay: 1000
                         }
 
                     },
@@ -197,15 +198,15 @@ module.exports = function(grunt) {
                             return {
                                 sass: {
                                     files: path.join(config.src, 'sass', '**/*.scss'),
-                                    tasks: ['sass:' + name, 'copy:' + name]
+                                    tasks: ['sass:' + name, 'concat:' + name, 'copy:' + name]
                                 },
                                 js: {
                                     files: path.join(config.src, 'js', '**/*.js'),
-                                    tasks: ['js:' + name, 'copy:' + name]
+                                    tasks: ['concat:' + name, 'copy:' + name]
                                 },
                                 jade: {
                                     files: path.join(config.src, 'jade', '**/*.jade'),
-                                    tasks: ['jade:' + name, 'copy:' + name]
+                                    tasks: ['jade:' + name, 'concat:' + name, 'copy:' + name]
                                 },
                                 img: {
                                     files: path.join(config.src, 'images', '**/*.*'),
