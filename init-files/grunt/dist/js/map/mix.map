@@ -1,1 +1,1 @@
-{"version":3,"sources":["../../../src/js/mix.js"],"names":["console","log"],"mappings":";;AAAAA,QAAQC,IAAI,YAEZD,QAAQC,IAAI","file":"mix.js","sourcesContent":["console.log('index.js');\r\n\r\nconsole.log('second.js');\r\n"]}
+{"version":3,"sources":["../../../src/js/mix.js"],"names":["console","log"],"mappings":";;AAAAA,QAAQC,IAAI,YAEZD,QAAQC,IAAI","file":"mix.js","sourcesContent":["console.log('index.js');\n\nconsole.log('second.js');\n"]}

@@ -1,3 +1,4 @@
+'use strict';
 module.exports = function(grunt) {
     var path = require('path');
 
@@ -11,6 +12,7 @@ module.exports = function(grunt) {
 
     var 
         iConfig = require('./config.js'),
+        lrPort = 35729,
 
         fn = {
             keyPrase: function(config, handle){
@@ -162,38 +164,52 @@ module.exports = function(grunt) {
                     files: r
                 };
             }),
+            connect: {
+                server: {
+                    options: {
+                        // 服务器端口
+                        port: 5000,
+                        // 服务器地址
+                        hostname: 'localhost',
+                        // open: true,
+                        // 物理路径
+                        base: process.cwd(),
+                        livereload: lrPort
+                    }
+
+                }
+                
+            },
+            
+            
             
             watch: (function(){
 
                 var 
-                    r = {},
+                    r = {
+                        options: {
+                            livereload: lrPort
+                        }
+
+                    },
                     param = fn.keyPrase(iConfig, function(config, name){
-                            var 
-                                opt = {
-                                    event: ['add', 'deleted'],
-                                    reload: true,
-                                    livereload: 5000
-                                };
+                            
                             return {
                                 sass: {
                                     files: path.join(config.src, 'sass', '**/*.scss'),
-                                    tasks: ['sass:' + name, 'copy:' + name],
-                                    options: opt
+                                    tasks: ['sass:' + name, 'copy:' + name]
                                 },
                                 js: {
                                     files: path.join(config.src, 'js', '**/*.js'),
-                                    tasks: ['js:' + name, 'copy:' + name],
-                                    options: opt
+                                    tasks: ['js:' + name, 'copy:' + name]
                                 },
                                 jade: {
                                     files: path.join(config.src, 'jade', '**/*.jade'),
-                                    tasks: ['html:' + name, 'copy:' + name],
-                                    options: opt
+                                    tasks: ['jade:' + name, 'copy:' + name]
                                 },
                                 img: {
                                     files: path.join(config.src, 'images', '**/*.*'),
-                                    tasks: ['copy:' + name],
-                                    options: opt
+                                    tasks: ['copy:' + name]
 
                                 }
                             };
@@ -221,7 +237,7 @@ module.exports = function(grunt) {
         taskArr = [],
         key;
     for(key in gruntConfig){
-        if(gruntConfig.hasOwnProperty(key) && key != 'pkg' && key != 'watch'){
+        if(gruntConfig.hasOwnProperty(key) && key != 'pkg' && key != 'watch' && key != 'connect'){
             taskArr.push(key);
         }
     }
@@ -231,7 +247,7 @@ module.exports = function(grunt) {
 
     // 加载任务插件
     for(key in gruntConfig.pkg.devDependencies){
-        if(gruntConfig.pkg.devDependencies.hasOwnProperty(key) && key != 'grunt'){
+        if(gruntConfig.pkg.devDependencies.hasOwnProperty(key) && key != 'grunt' && /^grunt/.test(key)){
             grunt.loadNpmTasks(key);
 
         }
@@ -267,6 +283,8 @@ module.exports = function(grunt) {
         }
         grunt.task.run(r);
     });
+
+    grunt.registerTask('live', ['connect', 'watch'])
 
     
     grunt.registerTask('default', helpFile);
