@@ -1,3 +1,5 @@
+'use strict';
+
 var readline = require('readline'),
     color = require('./colors'),
     fs = require('fs'),
@@ -20,13 +22,15 @@ var fn = {
                   terminal: false
                 });
             rl.question('[?] ' + color.yellow(questionStr) + color.gray( " ("+ defaultValue +")" ), function(answer){
-                if(answer == ""){
+                if(answer === ""){
                     answer = defaultValue;
                 }
 
                 rl.close();
-                callback && callback(answer);
-            })
+                if(callback){
+                    callback(answer);
+                }
+            });
         },
         /**
          * 日期格式化
@@ -50,37 +54,71 @@ var fn = {
             total: 0,
             // 点出现的间隔（以文件为单位）
             interval: 5,
+            source: [],
+            onMark: undefined,
+            onEnd: undefined,
             
             // 计时器 开始
-            start: function(){
+            start: function(o){
+                var op = o || {};
                 var she = this;
                 she.total = 0;
                 she.now = new Date();
+
+                if(op.onMark){
+                    she.onMark = op.onMark;
+                }
+                if(op.onEnd){
+                    she.onEnd = op.onEnd;
+                }
             },
             
             // 计时器打点记录
-            mark: function(){
+            mark: function(ctx){
                 var she = this;
                 if(!she.now){
                     return;
                 }
                 she.total++;
 
-                if(she.total == 1){
-                    fn.msg.nowrap(color.green('* '));
+                if(ctx){
+                    she.source.push(ctx);
                 }
 
-                she.total % she.interval && (
-                    fn.msg.nowrap('.')
-                );
+                if(she.onMark){
+                    she.onMark(ctx);
+
+                } else {
+                    if(she.total == 1){
+                        fn.msg.nowrap(color.green('* '));
+                    }
+
+                    if(she.total % she.interval){
+                        fn.msg.nowrap('.');
+                    }
+                }
+
+                
             },
             // 计时器结束
             end: function(){
-                var she = this;
-                if(she.now){
-                    fn.msg.nowrap(color.green(' ' + (new Date() - she.now) + 'ms\n'));
-                }
+                var 
+                    she = this,
+                    r = {
+                        time: new Date() - she.now,
+                        source: she.source.splice(0)
+                    };
+                
                 she.now = undefined;
+                she.onMark = undefined;
+                if(she.onEnd){
+                    she.onEnd(r);
+                    she.onEnd = undefined;
+
+                } else {
+                    fn.msg.nowrap(color.green(' ' + r.time + 'ms\n'));
+                    return r;
+                }
             },
 
             // 当前时间
@@ -100,14 +138,12 @@ var fn = {
             if(!op){
                 return;
             }
-            var maxKeyLen = 0,
-                myCommands = op.commands,
-                myOptions = op.options,
+            var 
                 accountMaxKeyLen = function(arr){
                     var maxLen = 0;
                     for(var key in arr){
-                        if(arr.hasOwnProperty(key)){
-                            maxLen < key.length && (maxLen = key.length);
+                        if(arr.hasOwnProperty(key) && maxLen < key.length){
+                             maxLen = key.length;
                         }
                     }
                     return maxLen;
@@ -119,13 +155,13 @@ var fn = {
                     }
                     return r + txt;
                 },
-                compose = function(key, arr){
+                compose = function(ikey, arr){
                     var r = [],
                         maxkeyLen = accountMaxKeyLen(arr),
                         i, len;
                     
                     r.push('');
-                    r.push(color.yellow(textIndent(key + ':', baseIndent)));
+                    r.push(color.yellow(textIndent(ikey + ':', baseIndent)));
                     
                     for(var key in arr){
                         if(arr.hasOwnProperty(key)){
@@ -150,9 +186,11 @@ var fn = {
                 baseIndent = 2,
                 r = [];
                 
-            op.usage && r.push(
-                textIndent(color.yellow('Usage: ')+ (op.usage || '') +' <command>', baseIndent)
-            );
+            if(op.usage){
+                r.push(
+                    textIndent(color.yellow('Usage: ') + (op.usage || '') +' <command>', baseIndent)
+                );
+            }
             
             if(op.commands){
                 r = r.concat(compose('Commands', op.commands));
@@ -250,6 +288,7 @@ var fn = {
          * @return {Void}
          */
         copyFiles: function(list, callback, filters, render){///{
+
             // 传入参数初始化
             if(typeof arguments[0] == 'string' && typeof arguments[1] == 'string'){
                 var flist = {};
@@ -265,15 +304,18 @@ var fn = {
                 filters = undefined;
             }
 
-            !render && (
+            if(!render){
                 render = function(filename, content){
                     return content;
-                }
-            );
+                };
+            }
+            
             
             if(typeof list != 'object'){
                 fn.msg.error('list 参数格式不正确');
-                callback && callback(r);
+                if(callback){
+                    callback();
+                }
                 return;
             }
             var fileCopy = function(file, toFile, filters, render){
@@ -282,7 +324,7 @@ var fn = {
                     }
                     var content = fs.readFileSync(file);
                     fs.writeFileSync(toFile, render(file, content));
-                    fn.timer.mark();
+                    fn.timer.mark(toFile);
                 },
                 pathCopy = function(path, toPath, done, filters){
                     if(!fs.existsSync(path) || (filters && path.match(filters))){
@@ -292,17 +334,13 @@ var fn = {
 
 
                     fs.readdir(path, function(err, list){
-                        var padding = list.length,
-                            paddingCheck = function(){
-                                if(!padding){
-                                    return done();
-                                }
-                            };
+                        var padding = list.length;
+                            
                         if(!padding){
                             return done();
                         }
                         
-                        list.forEach(function(item, index){
+                        list.forEach(function(item){
                             if(/^\./.test(item)){
                                 if(!--padding){
                                     return done();
@@ -320,7 +358,7 @@ var fn = {
                             } else if(stat.isDirectory()){
                                 if(!fs.existsSync(targetFile)){
                                     fs.mkdirSync(targetFile);
-                                    fn.timer.mark();
+                                    fn.timer.mark(targetFile);
                                 }
 
                                 pathCopy(myFile + '/', targetFile + '/',  function(){
@@ -340,27 +378,26 @@ var fn = {
                     });
                 },
                 paddingCheck = function(){
-                    if(!padding){
-                        callback && callback();
+                    if(!padding && callback){
+                        callback();
                     }
                 },
                 padding = 0,
+                paddingDown = function(){
+                    padding--;
+                    paddingCheck();
+                },
                 stat;
             for(var path in list){
                 if(list.hasOwnProperty(path)){
                     stat = fs.statSync(path);
                     if(stat.isDirectory()){
                         padding++;
-                        pathCopy(path + '/', list[path] + '/', function(){
-                            padding--;
-                            paddingCheck();
-
-                        }, filters);
+                        pathCopy(path + '/', list[path] + '/', paddingDown, filters);
                     } else {
                         padding++;
                         fileCopy(path, list[path], filters, render);
-                        padding--;
-                        paddingCheck();
+                        paddingDown();
                     }
                 }
             }
@@ -384,7 +421,9 @@ var fn = {
          * @return {Void}
          */
         removeFiles: function(list, callback, filters){///{
-            !fn.isArray(list) && (list = [list]);
+            if(!fn.isArray(list)){
+                list = [list];
+            }
             
             var rmFile = function(file, filters){
                     if(!fs.existsSync(file) || (filters && filters.test(file))){
@@ -393,13 +432,13 @@ var fn = {
                     try{
                         fs.unlinkSync(file);
                     } catch(er){}
-                    fn.timer.mark();
+                    fn.timer.mark(file);
 
                 },
                 rmPath = function(path, filters){
                     var list = fs.readdirSync(path);
 
-                    list.forEach(function(item, i){
+                    list.forEach(function(item){
                         var file = path + item;
                        
                         if(filters && filters.test(file)){
@@ -412,7 +451,7 @@ var fn = {
                                 try{
                                     fs.rmdirSync(file + '/');
                                 } catch(er){}
-                                fn.timer.mark();
+                                fn.timer.mark(file);
 
                             } else {
                                 rmFile(file);
@@ -421,7 +460,7 @@ var fn = {
                     });
                 };
 
-            list.forEach(function(item, index){
+            list.forEach(function(item){
                 if(!item){
                     return;
                 }
@@ -432,7 +471,9 @@ var fn = {
                     rmFile(item, filters);
                 }
             });
-            callback && callback();
+            if(callback){
+                callback();
+            }
         },///}
 
         /**
@@ -452,7 +493,7 @@ var fn = {
                 path = path.replace(/([^\:])\/+\//g, '$1/');
 
                 // a/b/../c/d/e/../../f/ => a/c/f/
-                var DOUBLE_DOT_REG = /[^\/]*(\/\.\.\/)/
+                var DOUBLE_DOT_REG = /[^\/]*(\/\.\.\/)/;
                 while(path.match(DOUBLE_DOT_REG)){
                     path = path.replace(DOUBLE_DOT_REG, '');
                 }
@@ -484,7 +525,9 @@ var fn = {
                     error:''
                 },
                 child;
-            showOutput === undefined && (showOutput = true);
+            if(showOutput === undefined){
+                showOutput = true;
+            }
             if (!str) {
                 r.error = '没任何 cmd 操作';
                 return callback(r);
@@ -497,7 +540,7 @@ var fn = {
             child = myCmd(str.join(" && "),{
                 maxBuffer: 2000 * 1024,
                 cwd: path || ''
-            }, function(err, stdout, stderr){
+            }, function(err){
                 if(err){
                     // r.error = err.stack.replace(/(\r|\n|\t)+/g,';').replace(/\s+/g,' ').replace(/:[^;:]+;/g,':');
                     if(showOutput){
@@ -522,52 +565,6 @@ var fn = {
             
         },
         
-        // 兼容存在严重问题， TODO
-        runSpawn: function(cmdstr, callback, path){
-            var mySpawn = require('child_process').spawn,
-                cmdArr = cmdstr.split(/\s+/),
-                cmdHandler = cmdArr.shift();
-            
-            if(pg.isWindows){
-                cmdHandler = 'npm.cmd';
-            }
-
-            var ctrl = mySpawn(cmdHandler, cmdArr, {
-                    cwd: path || undefined
-                }),
-                r = {
-                    'status': 0
-
-                };
-
-            ctrl.stdout.setEncoding('utf8');
-            ctrl.stdout.pipe(process.stdout);
-            ctrl.stderr.pipe(process.stderr);
-            
-            ctrl.on('error', function(code){
-                r.error = code;
-            });
-
-            ctrl.on('close', function(code){
-                if(code != 0){
-                    r.code = code;
-                } else {
-                    r.status = 1;
-                }
-
-                callback && callback(r);
-            });
-            
-            // ctrl.on('exit', function(code){
-                
-            //     if(code != 0){
-            //         r.code = code;
-            //     } else {
-            //         r.status = 1;
-            //     }
-            //     callback && callback(r);
-            // });
-        },
 
         
         
@@ -657,7 +654,7 @@ var fn = {
                         default:
                             break;
                     }///}
-                    argvMatch.forEach(function(arr, index){
+                    argvMatch.forEach(function(arr){
                         var fargv, fattr,
                             i, fs, len;
 
@@ -698,7 +695,6 @@ var fn = {
                 src += (!~src.indexOf('?')? '?': '&') + require('querystring').stringify(option.obj);
             }
             var uri = require('url').parse(src),
-                data = uri.query || '',
                 opt = {
                     method: method.toUpperCase(),
                     host: uri.hostname,
@@ -738,14 +734,20 @@ var fn = {
                                 r = myBuffer.toString();
                                 break;
                         }
-                        option.callback && option.callback(r, result);
-                        !option.nolog && fn.msg.notice('['+ method.toUpperCase() +'] ' + src + ' ' + color.green(new Date() - now + 'ms'));
+                        if(option.callback){
+                            option.callback(r, result);
+                        }
+                        if(!option.nolog){
+                            fn.msg.notice('['+ method.toUpperCase() +'] ' + src + ' ' + color.green(new Date() - now + 'ms'));
+                        }
                     });
                 },
                 myReq = uri.protocol == 'https'? https.request(opt, ajaxHandle) : http.request(opt, ajaxHandle);
                 myReq.on('error', function(er){
                     fn.msg.error(er.message);
-                    option.error && option.error(er);
+                    if(option.error){
+                        option.error(er);
+                    }
                 });
             // myReq.write(data);
             myReq.end();
@@ -797,7 +799,7 @@ var fn = {
                     }
                     fs.readdir(dir, function(err, list){
                         if(err){
-                            console.log('err', err)
+                            console.log('err', err);
                             return done(err);
                         }
 
@@ -812,17 +814,23 @@ var fn = {
                             fs.stat(myFile, function(err, stat){
                                 // 过滤隐藏文件
                                 if(/^\./.test(file)){
-                                    !--total && done(null, r);
+                                    if(!--total){
+                                        done(null, r);
+                                    }
                                     
                                 } else {
                                     if(stat && stat.isDirectory()){
-                                        readFiles(myFile, function(res){
-                                            !--total && done(null, r);
+                                        readFiles(myFile, function(){
+                                            if(!--total){
+                                                done(null, r);
+                                            }
                                         });
                                         
                                     } else {
                                         r.push(myFile.replace(filter, ''));
-                                        !--total && done(null, r);
+                                        if(!--total){
+                                            done(null, r);
+                                        }
                                         
                                     }
                                 }
@@ -837,9 +845,12 @@ var fn = {
                 };
             
             readFiles(location, function(error, files){
-                files && files.sort(function(elm1,elm2){
-                    return String(elm1).localeCompare(String(elm2));
-                });
+                if(files){
+                    files.sort(function(elm1,elm2){
+                        return String(elm1).localeCompare(String(elm2));
+                    });
+                }
+                
                 callback(error, files);
             });
 
@@ -866,7 +877,9 @@ var fn = {
          * @return {Array}  r      格式化后的数据
          */
         pathsFormat: function(list, prefix){
-            var prefix = prefix || '',
+            prefix = prefix || '';
+
+            var 
                 pathObj = {},
                 dataBuild = function(obj){
                     var r = [];    
@@ -888,12 +901,14 @@ var fn = {
                     return r;
                 };
 
-            list.forEach(function(pathstr, i){
+            list.forEach(function(pathstr){
                 var arr = pathstr.split('/'),
                     myObj = pathObj;
                 arr.forEach(function(path, i){
                     if(i != arr.length - 1){
-                        !myObj[path] && (myObj[path] = {});
+                        if(!myObj[path]){
+                            myObj[path] = {};
+                        }
                         myObj = myObj[path];
 
                     } else {
@@ -914,7 +929,9 @@ var fn = {
             she.queue = [];
             she.current = 0;
             she.then = function(fn){
-                typeof fn == 'function' && she.queue.push(fn);
+                if(typeof fn == 'function'){
+                    she.queue.push(fn);
+                }
                 return she;
             };
             she.start = function(){
@@ -960,7 +977,7 @@ var fn = {
         type: function (obj) {
             var type,
                 toString = Object.prototype.toString;
-            if (obj == null) {
+            if (obj === null) {
                 type = String(obj);
             } else {
                 type = toString.call(obj).toLowerCase();
@@ -1022,7 +1039,7 @@ var fn = {
 
             for (; i<length; i++) {
                 // Only deal with non-null/undefined values
-                if ((options = arguments[i]) != null) {
+                if ((options = arguments[i]) !== null) {
                     // Extend the base object
                     for (name in options) {
                         src = target[name];

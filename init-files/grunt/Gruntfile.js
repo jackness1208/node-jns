@@ -262,6 +262,7 @@ module.exports = function(grunt) {
             ' ',
             ' Commands:',
             '   build      run the Optimize task',
+            '   live       livereload on server preview',
             '',
             ' Options:',
             '   -h         output usage information',
