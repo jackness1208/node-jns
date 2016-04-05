@@ -31,7 +31,7 @@ var
                 }, process.cwd());
                 
             } else if(isJns){
-                fn.msg.notice('sorry, jns-node >= 2.0.0 is not support the jns-config.js, please reset to grunt or gulp file');
+                fn.msg.notice('sorry, jns-node >= 2.0.0 is not support the jns-config.js, please turn jns-node to 1.2.0');
                 callback();
 
             } else {

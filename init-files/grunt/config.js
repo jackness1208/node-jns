@@ -1,7 +1,8 @@
+'use strict';
 var 
     config = {
         'proj': {
-            debug: false,
+            requirejs: false,
             src: './src',
             dest: './dist',
             concat: {
