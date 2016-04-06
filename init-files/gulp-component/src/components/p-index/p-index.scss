@@ -1,14 +1,6 @@
-@mixin attr2all($cssAttr, $val...){
-    -webkit-#{$cssAttr}: $val;
-       -moz-#{$cssAttr}: $val;
-        -ms-#{$cssAttr}: $val;
-         -o-#{$cssAttr}: $val;
-            #{$cssAttr}: $val;
-}
+@import '../../sass/layout';
 
 body {
-    margin: 0;
-    padding: 0;
     background: #eee;
 }
 .logo {
@@ -18,7 +10,7 @@ body {
     width: 100px;
     height: 100px;
     margin: -50px 0 0 -50px;
-    background: url(../images/logo.gif);
+        background: url(./images/logo.gif);
     @include attr2all(transition, .4s);
 }
 .title {
@@ -36,4 +28,3 @@ body {
         @include attr2all(transform, rotate(#{($i - 1) * 90}deg));
     }
 }
-

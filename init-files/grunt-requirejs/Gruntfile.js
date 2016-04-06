@@ -1,97 +1,244 @@
+'use strict';
 module.exports = function(grunt) {
+    var path = require('path');
+
+    path.joinFormat = function(){
+        var iArgv = Array.prototype.slice.call(arguments);
+        var r = path.join.apply(path, iArgv);
+        return r
+            .replace(/\\+/g, '/')
+            .replace(/(^http[s]?:)[\/]+/g, '$1//');
+    };
 
     var 
+        iConfig = require('./config.js'),
+        lrPort = 35729,
+
+        fn = {
+            keyPrase: function(config, handle){
+                var r = {};
+                for(var key in config){
+                    if(config.hasOwnProperty(key)){
+                        r[key] = handle(config[key], key);
+                    }
+                }
+                return r;
+            },
+            varRender: function(str, op){
+                return str
+                    .replace(/\{\$src\}/g, op.src)
+                    .replace(/\{\$dest\}/g, op.dest);
+            }
+        },
         gruntConfig = {
             pkg: grunt.file.readJSON('package.json'),
 
-            // // requirejs 压缩 要放在最后， 不然会中断往后的所有任务
-            // requirejs: {
-            //     'tieba-index': {
-            //         options: {
-            //             baseUrl: "js",
-            //             name: "index-debug",
-            //             out: "js/index.js",
-            //             paths: {
-            //                 zepto: 'lib/zepto.min',
-            //                 hiido: 'commons/hiido_click',
-            //                 checkOSAndYYVer: 'checkOSAndYYVer'
-            //             },
-            //             shim: {
-            //                 zepto: {
-            //                     exports: '$'
-            //                 },
-            //                 checkOSAndYYVer: {
-            //                     deps: ['zepto']
-            //                 },
-            //                 hiido: {
-            //                     exports: 'hiido'
-            //                 }
-            //             }
+            // uglify 压缩
+            uglify: fn.keyPrase(iConfig, function(config){
+                return {
+                    options: {
+                        // 放在生成后的压缩文件的头部注释文案
+                        banner: '/*! builded <%= grunt.template.today() %> */\n',
+                        sourceMap: true,
+                        sourceMapName: function(p){
+                            var 
+                                f = p.split("/"),
+                                filename = f.pop(),
+                                nav = f.join("/") + "/";
+                            return nav + "map/" +  filename.replace('.js','.map');
+                        },
+                        sourceMapIncludeSources: true
 
-            //         }
-            //     }
-               
-            // },
-            
-            // // uglify 压缩
-            // uglify: {
-            //     demo: {
-            //         options: {
-            //             // 放在生成后的压缩文件的头部注释文案
-            //             banner: '/*! builded <%= grunt.template.today() %> */\n',
-            //             // 生成的map文件地址的 相对路径
-            //             sourceMapRoot: '../../',
-            //             // 生成 map文件的地址
-            //             sourceMap: function(path){
-            //                 var f = path.split("/"),
-            //                     filename = f.pop(),
-            //                     nav = f.join("/") + "/";
-            //                 return nav + "map/" +  filename.replace('.js','.map');
-            //             },
-            //             // 用于定义 map文件地址 并放在压缩文件底部， url相对于 压缩文件
-            //             sourceMappingURL: function(path){
-            //                 var f = path.split("/"),
-            //                     filename = f.pop(),
-            //                     nav = f.join("/") + "/";
-            //                 return "map/" +  filename.replace('.js','.map');
-            //             }
-            //         },
-            //         files:{
-            //             "dist/mix.js":["src/1.js","src/2.js"]
-            //         }
-            //     }
-            // }
+                    },
+                    files: [{
+                        expand: true,
+                        cwd: path.join(config.src, 'js'),
+                        src: '**/*.js',
+                        dest: path.join(config.dest, 'js')
+                    }]
+                };
+
+            }),
+
             // sass
-            // sass: {
-            //     'weiweiyou': {
-            //         files: [{
-            //             expand: true,
-            //             cwd: 'sass/',
-            //             src: ['*.scss'],
-            //             dest: 'css',
-            //             ext: '.css'
-            //         }]
-            //     }
-            // },
+            sass: fn.keyPrase(iConfig, function(config){
+                return {
+                    options: {
+                        sourcemap: 'none'
+
+                    },
+                    files: [{
+                        expand: true,
+                        cwd: path.join(config.src, 'sass'),
+                        src: ['*.scss'],
+                        dest: path.join(config.src, 'css'),
+                        ext: '.css'
+                    }]
+
+                };
+            }),
             
-            // jade: {
-            //    'weiweiyou': {
-            //         options: {
-            //             pretty: true,
-            //             client: false,
-            //             runtime: false
-            //         },
-            //         files: {
-            //             'html/': ['tpl/*.jade']
-            //         }
-            //     }
-            // }
+
+            // jade
+            jade: fn.keyPrase(iConfig, function(config){
+                return {
+                    options: {
+                        pretty: true,
+                        client: false,
+                        runtime: false
+                    },
+                    files: (function(){
+                        var r = {};
+                        r[path.join(config.src, 'html')] = [path.join(config.src, 'jade/*.jade')];
+                        return r;
+                    })()
+                };
+
+            }),
+            concat: fn.keyPrase(iConfig, function(config){
+                var 
+                    r = {},
+                    pushFiles = function(src, dest){
+                        var iKey = fn.varRender(src, config);
+                        r[iKey] = [];
+                        dest.forEach(function(item){
+                            r[iKey].push(fn.varRender(item, config));
+                        });
+                    };
+                if(config.concat){
+                    for(var key in config.concat){
+                        if(config.concat.hasOwnProperty(key)){
+                            pushFiles(key, config.concat[key]);
+                        }
+                    }
+                }
+                
+                return {
+                    files: r
+                };
+            }),
+
+            // copy
+            copy: fn.keyPrase(iConfig, function(config){
+                var 
+                    pushFiles = function(src, dest){
+                        return {
+                            expand: true, 
+                            cwd: src,
+                            src: ['**'], 
+                            dest: dest
+                        };
+                    },
+                    r = [
+                        pushFiles(
+                            path.join(config.src, 'html'), 
+                            path.join(config.dest, 'html')
+                        ),
+                        pushFiles(
+                            path.join(config.src, 'css'),
+                            path.join(config.dest, 'css')
+                        ),
+                        pushFiles(
+                            path.join(config.src, 'images'), 
+                            path.join(config.dest, 'images')
+                        )
+                    ],
+                    i, key;
+
+
+
+                for(key in config.copy){
+                    if(config.copy.hasOwnProperty(key)){
+                        for(i = 0; i < config.copy[key].length; i++){
+                            r.push(
+                                pushFiles(
+                                    fn.varRender(key, config), 
+                                    fn.varRender(config.copy[key][i], config)
+                                )
+                            );
+                        }
+
+                    }
+                }
+                return {
+                    files: r
+                };
+            }),
+            connect: {
+                server: {
+                    options: {
+                        // 服务器端口
+                        port: 5000,
+                        // 服务器地址
+                        hostname: 'localhost',
+                        // open: true,
+                        // 物理路径
+                        base: process.cwd(),
+                        livereload: lrPort
+                    }
+
+                }
+                
+            },
+            
+            
+            
+            watch: (function(){
+
+                var 
+                    r = {
+                        options: {
+                            livereload: lrPort,
+                            debounceDelay: 1000
+                        }
+
+                    },
+                    param = fn.keyPrase(iConfig, function(config, name){
+                            
+                            return {
+                                sass: {
+                                    files: path.join(config.src, 'sass', '**/*.scss'),
+                                    tasks: ['sass:' + name, 'concat:' + name, 'copy:' + name]
+                                },
+                                js: {
+                                    files: path.join(config.src, 'js', '**/*.js'),
+                                    tasks: ['concat:' + name, 'copy:' + name]
+                                },
+                                jade: {
+                                    files: path.join(config.src, 'jade', '**/*.jade'),
+                                    tasks: ['jade:' + name, 'concat:' + name, 'copy:' + name]
+                                },
+                                img: {
+                                    files: path.join(config.src, 'images', '**/*.*'),
+                                    tasks: ['copy:' + name]
+
+                                }
+                            };
+
+                        });
+
+                    var key, key2;
+
+                    for(key in param){
+                        if(param.hasOwnProperty(key)){
+                            for(key2 in param[key]){
+                                if(param[key].hasOwnProperty(key2)){
+                                    r[key + '-' + key2] = param[key][key2];
+                                }
+                            }
+                        }
+                    }
+                    return r;
+
+            })()
 
         };
 
-    var taskArr = [];
-    for(var key in gruntConfig){
-        if(gruntConfig.hasOwnProperty(key) && key != 'pkg'){
+    var 
+        taskArr = [],
+        key;
+    for(key in gruntConfig){
+        if(gruntConfig.hasOwnProperty(key) && key != 'pkg' && key != 'watch' && key != 'connect'){
             taskArr.push(key);
         }
     }
@@ -100,8 +247,8 @@ module.exports = function(grunt) {
     grunt.initConfig(gruntConfig);
 
     // 加载任务插件
-    for(var key in gruntConfig.pkg.devDependencies){
-        if(gruntConfig.pkg.devDependencies.hasOwnProperty(key) && key != 'grunt'){
+    for(key in gruntConfig.pkg.devDependencies){
+        if(gruntConfig.pkg.devDependencies.hasOwnProperty(key) && key != 'grunt' && /^grunt/.test(key)){
             grunt.loadNpmTasks(key);
 
         }
@@ -115,6 +262,7 @@ module.exports = function(grunt) {
             ' ',
             ' Commands:',
             '   build      run the Optimize task',
+            '   live       livereload on server preview',
             '',
             ' Options:',
             '   -h         output usage information',
@@ -122,6 +270,7 @@ module.exports = function(grunt) {
             ''
         ].join('\n'));
     };
+    // grunt.loadTasks('tasks');
 
     // 注册任务
     grunt.registerTask('build', function(name) {
@@ -133,11 +282,15 @@ module.exports = function(grunt) {
 
         } else {
             r = taskArr;
-
         }
         grunt.task.run(r);
     });
+
+    grunt.registerTask('live', ['connect', 'watch'])
+
+    
     grunt.registerTask('default', helpFile);
     grunt.registerTask('-h', helpFile);
 
-}
+};
+
