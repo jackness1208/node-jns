@@ -24,41 +24,108 @@ module.exports = function(grunt) {
                 }
                 return r;
             },
-            varRender: function(str, op){
-                return str
-                    .replace(/\{\$src\}/g, op.src)
-                    .replace(/\{\$dest\}/g, op.dest);
+            varRender: function(ctx, op){
+                var r;
+                if(!ctx){
+                    return ctx;
+                }
+                if(ctx.forEach){
+                    r = [];
+                    ctx.forEach(function(str){
+                        r.push(
+                            str
+                            .replace(/\{\$src\}/g, op.src)
+                            .replace(/\{\$dest\}/g, op.dest)
+                        );
+                    });
+                    
+                } else {
+                    r = ctx
+                        .replace(/\{\$src\}/g, op.src)
+                        .replace(/\{\$dest\}/g, op.dest);
+                }
+                return r;
+                
             }
         },
         gruntConfig = {
             pkg: grunt.file.readJSON('package.json'),
 
-            // uglify 压缩
-            uglify: fn.keyPrase(iConfig, function(config){
-                return {
-                    options: {
-                        // 放在生成后的压缩文件的头部注释文案
-                        banner: '/*! builded <%= grunt.template.today() %> */\n',
-                        sourceMap: true,
-                        sourceMapName: function(p){
-                            var 
-                                f = p.split("/"),
-                                filename = f.pop(),
-                                nav = f.join("/") + "/";
-                            return nav + "map/" +  filename.replace('.js','.map');
-                        },
-                        sourceMapIncludeSources: true
+            // requirejs: fn.keyPrase(iConfig, function(config){
+            //     if(config.requirejs){
+            //         return {
+            //             options: {
+            //                 baseUrl: '',
+            //                 mainConfigFile: config.mainConfigFile
+            //             },
+            //             include
+            //         };
 
+            //     } else {
+            //         return;
+            //     }
+                
+            // }),
+            requirejs: (function(){
+
+                var 
+                    r = {
+                        options: {
+                        }
                     },
-                    files: [{
-                        expand: true,
-                        cwd: path.join(config.src, 'js'),
-                        src: '**/*.js',
-                        dest: path.join(config.dest, 'js')
-                    }]
-                };
+                    param = fn.keyPrase(iConfig, function(config){
+                        var 
+                            r = {},
+                            iFiles,
+                            rConfig = config.requirejs,
+                            addDir = function(arr){
+                                var 
+                                    r = [];
+                                arr.forEach(function(str){
+                                    r.push(path.join(__dirname, str));
+                                });
+                                return r;
+                            };
+                        if(rConfig){
+                            iFiles = rConfig.files;
+                            for(var key in iFiles){
+                                if(iFiles.hasOwnProperty(key)){
+                                    r[fn.varRender(key, config)] = {
+                                        options: {
+                                            baseUrl: path.join(config.src, 'js'),
+                                            mainConfigFile: path.join(__dirname, fn.varRender(rConfig.mainConfigFile, config)) ,
+                                            include: addDir(fn.varRender(iFiles[key], config)),
+                                            out: fn.varRender(key, config)
+                                            
+                                        }
+                                    };
+                                }
+                            }
+                            return r;
 
-            }),
+                        } else {
+                            return;
+                        }
+                            
+
+                    });
+
+                var key, key2;
+
+                for(key in param){
+                    if(param.hasOwnProperty(key)){
+                        for(key2 in param[key]){
+                            if(param[key].hasOwnProperty(key2)){
+                                r[key + '-' + key2] = param[key][key2];
+                            }
+                        }
+                    }
+                }
+                return r;
+
+            })(),
+
+            
 
             // sass
             sass: fn.keyPrase(iConfig, function(config){
@@ -181,6 +248,32 @@ module.exports = function(grunt) {
                 
             },
             
+            // uglify 压缩
+            uglify: fn.keyPrase(iConfig, function(config){
+                return {
+                    options: {
+                        // 放在生成后的压缩文件的头部注释文案
+                        banner: '/*! builded <%= grunt.template.today() %> */\n',
+                        sourceMap: false,
+                        sourceMapName: function(p){
+                            var 
+                                f = p.split("/"),
+                                filename = f.pop(),
+                                nav = f.join("/") + "/";
+                            return nav + "map/" +  filename.replace('.js','.map');
+                        },
+                        sourceMapIncludeSources: true
+
+                    },
+                    files: [{
+                        expand: true,
+                        cwd: path.join(config.dest, 'js'),
+                        src: '**/*.js',
+                        dest: path.join(config.dest, 'js')
+                    }]
+                };
+
+            }),
             
             
             watch: (function(){
@@ -233,6 +326,7 @@ module.exports = function(grunt) {
             })()
 
         };
+    console.log(JSON.stringify(gruntConfig.requirejs, null, 4));
 
     var 
         taskArr = [],
@@ -286,7 +380,7 @@ module.exports = function(grunt) {
         grunt.task.run(r);
     });
 
-    grunt.registerTask('live', ['connect', 'watch'])
+    grunt.registerTask('live', ['connect', 'watch']);
 
     
     grunt.registerTask('default', helpFile);
