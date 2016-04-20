@@ -15,7 +15,8 @@ var
             //     '{$dest}/js/p-index.js': ['{$src}/js/lib/require.js', '{$dest}/js/p-index.js']
             // },
             copy: {
-                '{$src}/js/lib': ['{$dest}/js/lib']
+                '{$src}/js/lib': ['{$dest}/js/lib'],
+                '{$src}/js/rConfig': ['{$dest}/js/rConfig'],
             }
             
         }

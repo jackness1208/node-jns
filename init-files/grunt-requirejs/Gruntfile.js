@@ -82,7 +82,7 @@ module.exports = function(grunt) {
                                 var 
                                     r = [];
                                 arr.forEach(function(str){
-                                    r.push(path.join(__dirname, str));
+                                    r.push(path.joinFormat(__dirname, str));
                                 });
                                 return r;
                             };
@@ -92,8 +92,8 @@ module.exports = function(grunt) {
                                 if(iFiles.hasOwnProperty(key)){
                                     r[fn.varRender(key, config)] = {
                                         options: {
-                                            baseUrl: path.join(config.src, 'js'),
-                                            mainConfigFile: path.join(__dirname, fn.varRender(rConfig.mainConfigFile, config)) ,
+                                            baseUrl: path.joinFormat(config.src, 'js'),
+                                            mainConfigFile: path.joinFormat(__dirname, fn.varRender(rConfig.mainConfigFile, config)) ,
                                             include: addDir(fn.varRender(iFiles[key], config)),
                                             out: fn.varRender(key, config)
                                             
@@ -326,7 +326,6 @@ module.exports = function(grunt) {
             })()
 
         };
-    console.log(JSON.stringify(gruntConfig.requirejs, null, 4));
 
     var 
         taskArr = [],

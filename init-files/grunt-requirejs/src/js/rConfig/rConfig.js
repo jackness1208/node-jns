@@ -4,7 +4,6 @@ var
         paths: {
             // widget
             'rotate': '../js/w-rotate',
-            // 'rotate': 'src/js/w-rotate',
         },
         shim: {
             // rotate: {

@@ -2,6 +2,9 @@
 (function(){
     var 
         rotate = function(target, classes){
+            if(!target){
+                return;
+            }
             clearTimeout(target.aniKey);
             if(!target.aniIndex){
                 target.aniIndex = 1;
@@ -28,7 +31,9 @@
         };
 
     if(typeof define != 'undefined'){
-        define([], rotate);
+        define([], function(){
+            return rotate;
+        });
     } else {
         window.rotate = rotate;
     }
