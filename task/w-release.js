@@ -95,6 +95,7 @@ var
                                 }
 
                             }).then(function(next){ // optimize
+                                fn.timer.start();
                                 if(op.optimize){
                                     release.optimize(function(){
                                         next();
