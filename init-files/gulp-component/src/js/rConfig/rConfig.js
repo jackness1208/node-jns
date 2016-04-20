@@ -1,7 +1,9 @@
+'use strict';
 var require = {
+
     // baseUrl: '../js',
     paths: {
-        jquery: '../../js/lib/jQuery/jquery-1.11.1.js'
+        rotate: '../../components/w-rotate/w-rotate'
     },
     shim: {
     }

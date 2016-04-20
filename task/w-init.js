@@ -1,4 +1,4 @@
-// 'use strict';
+'use strict';
 
 var 
     inquirer = require("inquirer"),
@@ -46,7 +46,9 @@ var
                 usage: 'jns init',
                 commands: {
                     'grunt': 'init doc paths with grunt',
+                    'grunt-requirejs': 'init doc paths with grunt-require',
                     'gulp': 'init doc paths with gulp',
+                    'gulp-component': 'init doc paths with gulp-component',
                     'rename': 'init rename pluins',
                     'reptile': 'init reptile pluins'
                 },
@@ -59,9 +61,15 @@ var
         grunt: function(){
             fn.copyFiles('init-files/grunt');
         },
+        gruntRequirejs: function(){
+            fn.copyFiles('init-files/grunt-requirejs');
+        },
 
         gulp: function(){
             fn.copyFiles('init-files/gulp');
+        },
+        gulpComponent: function(){
+            fn.copyFiles('init-files/gulp-component');
         },
         // 爬虫
         reptile: function(){
@@ -152,8 +160,16 @@ module.exports = function(type){
             attributes.grunt();
             break;
 
+        case 'grunt-requirejs':
+            attributes.gruntRequirejs();
+            break;
+
         case 'gulp':
             attributes.gulp();
+            break;
+
+        case 'gulp-component':
+            attributes.gulpComponent();
             break;
 
         case 'rename':

@@ -3,9 +3,12 @@ html
     head
         meta(charset="utf-8")
         title html5
-        link(rel="stylesheet", href="../css/index.css", type="text/css")
-        script(src="../js/mix.js")
+        link(rel="stylesheet", href="../../css/index.css", type="text/css")
 
     body
         div.logo#logo
         div.title HELLO DEMO
+
+        script(src="../../js/rConfig/rConfig.js", local-usage)
+        script(src="../../js/lib/requirejs/require.js", data-main="./p-index.js")
+
